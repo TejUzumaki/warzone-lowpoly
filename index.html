@@ -292,36 +292,40 @@ function loadSoldierModel(){
 }
 
 function createEnemyFromGlb(etype,faction){
-  const clone=soldierGlb.scene.clone();
-  const s=etype.scale;
-  clone.scale.set(s,s,s);
-  // Tint by faction
-  const fc=faction===0?new THREE.Color(0xcc6666):new THREE.Color(0x6688cc);
-  clone.traverse(c=>{
-    if(c.isMesh&&c.material){
-      c.material=c.material.clone();
-      if(c.material.color) c.material.color.lerp(fc,0.6);
+  try {
+    const clone=soldierGlb.scene.clone();
+    const s=etype.scale;
+    clone.scale.set(s,s,s);
+    var fc=faction===0?new THREE.Color(0xcc6666):new THREE.Color(0x6688cc);
+    clone.traverse(function(c){
+      if(c.isMesh&&c.material){
+        c.material=c.material.clone();
+        if(c.material.color) c.material.color.lerp(fc,0.6);
+      }
+    });
+    var mixer=new THREE.AnimationMixer(clone);
+    var actions={idle:null,walk:null,run:null};
+    for(var i=0;i<soldierGlb.animations.length;i++){
+      var clip=soldierGlb.animations[i];
+      var n=clip.name.toLowerCase();
+      if(n.indexOf('run')>=0&&!actions.run) actions.run=mixer.clipAction(clip);
+      else if(n.indexOf('walk')>=0&&!actions.walk) actions.walk=mixer.clipAction(clip);
+      else if((n.indexOf('idle')>=0||n.indexOf('stand')>=0)&&!actions.idle) actions.idle=mixer.clipAction(clip);
     }
-  });
-  // Animation mixer
-  const mixer=new THREE.AnimationMixer(clone);
-  const actions={idle:null,walk:null,run:null};
-  for(const clip of soldierGlb.animations){
-    const n=clip.name.toLowerCase();
-    if(n.includes('run')&&!actions.run) actions.run=mixer.clipAction(clip);
-    else if(n.includes('walk')&&!actions.walk) actions.walk=mixer.clipAction(clip);
-    else if((n.includes('idle')||n.includes('stand'))&&!actions.idle) actions.idle=mixer.clipAction(clip);
+    if(soldierGlb.animations.length>0){
+      var first=soldierGlb.animations[0];
+      if(!actions.idle) actions.idle=mixer.clipAction(first);
+      if(!actions.walk) actions.walk=mixer.clipAction(first);
+      if(!actions.run) actions.run=actions.walk;
+    }
+    var akeys=Object.keys(actions);
+    for(var j=0;j<akeys.length;j++){if(actions[akeys[j]])actions[akeys[j]].setLoop(THREE.LoopRepeat);}
+    if(actions.idle) actions.idle.play();
+    return {group:clone,mixer:mixer,actions:actions,currentAction:'idle'};
+  } catch(err) {
+    console.error('GLB clone failed, using box fallback:', err);
+    return createEnemyModelBox(etype, faction);
   }
-  // Fallbacks
-  if(soldierGlb.animations.length>0){
-    const first=soldierGlb.animations[0];
-    if(!actions.idle) actions.idle=mixer.clipAction(first);
-    if(!actions.walk) actions.walk=mixer.clipAction(first);
-    if(!actions.run) actions.run=actions.walk;
-  }
-  Object.values(actions).forEach(a=>{ if(a) a.setLoop(THREE.LoopRepeat); });
-  if(actions.idle) actions.idle.play();
-  return {group:clone,mixer,actions,currentAction:'idle'};
 }
 
 /* Legacy box model fallback */
@@ -857,7 +861,14 @@ function startGame(){
   if(gameMode==='br'){dom.zoneTimer.style.display='block';dom.playerCountTop.style.display='block';initZone();var c=39;waveEnemiesAlive=c;for(var i=0;i<c;i++)spawnEnemy();}
   else{dom.zoneTimer.style.display='none';dom.playerCountTop.style.display='none';var c=8;waveEnemiesAlive=c;for(var i=0;i<c;i++)spawnEnemy();announceWave('WAVE 1','#90ee90');}
   gameActive=true;
-}
+  }catch(err){
+    document.getElementById('hud').style.display='none';
+    document.getElementById('touchControls').style.display='none';
+    document.getElementById('startScreen').style.display='flex';
+    document.getElementById('loadingStatus').textContent='ERROR: '+err.message;
+    document.getElementById('loadingStatus').style.color='#ff4444';
+    console.error('startGame error:',err);
+  }
 
 document.querySelectorAll('.mode-btn').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');gameMode=btn.dataset.mode;});});
 document.getElementById('startBtn').addEventListener('click',startGame);
@@ -882,7 +893,7 @@ loadSoldierModel().then(function(){
 });
 
 var lastTime=0;
-function animate(time){requestAnimationFrame(animate);var dt=Math.min((time-lastTime)/1000,.1);lastTime=time;if(gameActive)updateGame(dt);renderer.render(scene,camera);}
+function animate(time){requestAnimationFrame(animate);var dt=Math.min((time-lastTime)/1000,.1);lastTime=time;if(gameActive)updateGame(dt);camera.position.copy(playerPos);camera.rotation.set(cameraPitch,cameraYaw,0);renderer.render(scene,camera);}
 animate(0);
 </script>
 </body>
