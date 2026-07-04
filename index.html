@@ -766,143 +766,123 @@ function checkWinLoss(){
     document.getElementById('deathScreen').style.display='flex';
     document.getElementById('deathTitle').textContent='SQUAD ELIMINATED';
     document.getElementById('deathScreen').classList.remove('victory');
-    document.getElementById('deathStats').textContent=`Eliminations: ${kills} | Score: ${score} | Wave: ${wave}`;
+    document.getElementById('deathStats').textContent='Eliminations: '+kills+' | Score: '+score+' | Wave: '+wave;
     document.exitPointerLock?.();
   }
   if(gameMode==='survival'&&waveEnemiesAlive<=0&&gameActive){
-    wave++;announceWave(`WAVE ${wave}`,'#90ee90');dom.waveNum.textContent=wave;
-    const c=5+wave*3;waveEnemiesAlive=c;for(let i=0;i<c;i++) spawnEnemy();
+    wave++;announceWave('WAVE '+wave,'#90ee90');dom.waveNum.textContent=wave;
+    var c=5+wave*3;waveEnemiesAlive=c;for(var i=0;i<c;i++)spawnEnemy();
   }
   if(gameMode==='br'){
-    const alive=enemies.filter(e=>!e.isDead).length;
+    var alive=enemies.filter(function(e){return !e.isDead;}).length;
     dom.playerCountVal.textContent=alive+1;
     if(alive<=0&&gameActive){
       gameActive=false;sfxVictory();
       document.getElementById('deathScreen').style.display='flex';
       document.getElementById('deathTitle').textContent='WINNER WINNER';
       document.getElementById('deathScreen').classList.add('victory');
-      document.getElementById('deathStats').textContent=`Eliminations: ${kills} | Score: ${score}`;
+      document.getElementById('deathStats').textContent='Eliminations: '+kills+' | Score: '+score;
       document.exitPointerLock?.();
     }
   }
 }
 
-/* ============================================================
-   MAIN UPDATE LOOP
-============================================================ */
 function updateGame(dt){
-  const cd=Math.min(dt,.06);
-  let ix=joyX,iy=joyY;if(!isMobile){const pc=window.getPCInput();ix=pc.x;iy=pc.y;}
-  const fw=new THREE.Vector3(-Math.sin(cameraYaw),0,-Math.cos(cameraYaw));
-  const rt=new THREE.Vector3(Math.cos(cameraYaw),0,-Math.sin(cameraYaw));
-  const dir=new THREE.Vector3().addScaledVector(rt,ix).addScaledVector(fw,-iy);if(dir.length()>1)dir.normalize();
-  const spd=(isCrouching?4.5:8.5)*cd;
-  const res=checkCollisions(playerPos.x+dir.x*spd,playerPos.z+dir.z*spd);
+  var cd=Math.min(dt,.06);
+  var ix=joyX,iy=joyY;if(!isMobile){var pc=window.getPCInput();ix=pc.x;iy=pc.y;}
+  var fw=new THREE.Vector3(-Math.sin(cameraYaw),0,-Math.cos(cameraYaw));
+  var rt=new THREE.Vector3(Math.cos(cameraYaw),0,-Math.sin(cameraYaw));
+  var dir=new THREE.Vector3().addScaledVector(rt,ix).addScaledVector(fw,-iy);if(dir.length()>1)dir.normalize();
+  var spd=(isCrouching?4.5:8.5)*cd;
+  var res=checkCollisions(playerPos.x+dir.x*spd,playerPos.z+dir.z*spd);
   playerPos.x=res.x;playerPos.z=res.z;
   playerVelY-=GRAVITY*cd;playerPos.y+=playerVelY*cd;
-  const gh=getGroundHeight(playerPos.x,playerPos.z);
-  const tH=gh+(isCrouching?1:1.7);
+  var gh=getGroundHeight(playerPos.x,playerPos.z);
+  var tH=gh+(isCrouching?1:1.7);
   if(playerPos.y<=tH){playerPos.y=tH;playerVelY=0;isGrounded=true;}else{isGrounded=false;}
   if(playerPos.y<gh+.3){playerPos.y=gh+.3;playerVelY=Math.max(0,playerVelY);}
   playerPos.x=clampToWorld(playerPos.x);playerPos.z=clampToWorld(playerPos.z);
-
   if(screenShake>0)screenShake=Math.max(0,screenShake-cd*8);
-  const sX=(Math.random()-.5)*screenShake*.3,sY=(Math.random()-.5)*screenShake*.3;
-  camera.position.set(playerPos.x+sX,playerPos.y+sY,playerPos.z);
+  camera.position.set(playerPos.x+(Math.random()-.5)*screenShake*.3,playerPos.y+(Math.random()-.5)*screenShake*.3,playerPos.z);
   camera.rotation.set(cameraPitch,cameraYaw,0);
   camera.fov=THREE.MathUtils.lerp(camera.fov,targetFov,.15);camera.updateProjectionMatrix();
-
-  if(gameMode==='br'){const ed=distFromZoneEdge(playerPos.x,playerPos.z);if(ed<0){health-=5*cd;dom.zoneDamageOverlay.style.opacity=.7;}else{dom.zoneDamageOverlay.style.opacity=0;}}
-
-  const rc=new THREE.Raycaster();rc.setFromCamera(new THREE.Vector2(0,0),camera);
-  const aEM=[];enemies.forEach(e=>{if(!e.isDead)e.mesh.traverse(c=>{if(c.isMesh)aEM.push(c);});});
-  const hH=rc.intersectObjects(aEM,false);crosshairOnEnemy=hH.length>0;
+  if(gameMode==='br'){var ed=distFromZoneEdge(playerPos.x,playerPos.z);if(ed<0){health-=5*cd;dom.zoneDamageOverlay.style.opacity=.7;}else{dom.zoneDamageOverlay.style.opacity=0;}}
+  var rc=new THREE.Raycaster();rc.setFromCamera(new THREE.Vector2(0,0),camera);
+  var aEM=[];enemies.forEach(function(e){if(!e.isDead)e.mesh.traverse(function(c){if(c.isMesh)aEM.push(c);});});
+  var hH=rc.intersectObjects(aEM,false);crosshairOnEnemy=hH.length>0;
   dom.crosshair.style.setProperty('--ch-color',crosshairOnEnemy?'#ff4444':'#fff');
-
   if(isADS&&!crosshairOnEnemy){
-    let cD=.12,cW=null;
-    const adH=useGlb?soldierHeight*.9:1.6;
-    enemies.forEach(e=>{if(e.isDead)return;const wp=e.mesh.position.clone();wp.y+=adH*e.etype.scale;const sp=wp.clone().project(camera);if(sp.z>0&&sp.z<1){const sd=Math.hypot(sp.x,sp.y);if(sd<cD){cD=sd;cW=wp;}}});
-    if(cW){const td=new THREE.Vector3().subVectors(cW,camera.position).normalize();cameraYaw=THREE.MathUtils.lerp(cameraYaw,Math.atan2(-td.x,-td.z),.1);cameraPitch=THREE.MathUtils.lerp(cameraPitch,Math.asin(THREE.MathUtils.clamp(td.y,-1,1)),.1);}
+    var cD=.12,cW=null;var adH2=useGlb?soldierHeight*.9:1.6;
+    enemies.forEach(function(e){if(e.isDead)return;var wp=e.mesh.position.clone();wp.y+=adH2*e.etype.scale;var sp=wp.clone().project(camera);if(sp.z>0&&sp.z<1){var sd=Math.hypot(sp.x,sp.y);if(sd<cD){cD=sd;cW=wp;}}});
+    if(cW){var td=new THREE.Vector3().subVectors(cW,camera.position).normalize();cameraYaw=THREE.MathUtils.lerp(cameraYaw,Math.atan2(-td.x,-td.z),.1);cameraPitch=THREE.MathUtils.lerp(cameraPitch,Math.asin(THREE.MathUtils.clamp(td.y,-1,1)),.1);}
   }
-
-  const wpn=WEAPONS[currentWeaponKey],stA=ammoState[currentWeaponKey];
-  const wF=isFiring&&(wpn.auto||fireTimer<=0);
+  var wpn=WEAPONS[currentWeaponKey],stA=ammoState[currentWeaponKey];
+  var wF=isFiring&&(wpn.auto||fireTimer<=0);
   if(wF&&fireTimer<=0&&!isReloading&&stA.mag>0&&gameActive){
     stA.mag--;fireTimer=wpn.fireDelay;weaponGroup.position.z=-.18;
-    if(muzzleFlash){muzzleFlash.material.opacity=1;setTimeout(()=>{if(muzzleFlash)muzzleFlash.material.opacity=0;},60);}
+    if(muzzleFlash){muzzleFlash.material.opacity=1;setTimeout(function(){if(muzzleFlash)muzzleFlash.material.opacity=0;},60);}
     sfxGunshot(currentWeaponKey);screenShake=Math.min(screenShake+(wpn.pellets?1:.6),3.5);
-    const pc=wpn.pellets||1;let aH=false,aHS=false;
-    for(let p=0;p<pc;p++){
-      const sR=new THREE.Raycaster();const sxx=(Math.random()-.5)*wpn.spread*2,syy=(Math.random()-.5)*wpn.spread*2;
-      sR.setFromCamera(new THREE.Vector2(sxx,syy),camera);const h2=sR.intersectObjects(aEM,false);
+    var pc=wpn.pellets||1;var aH=false,aHS=false;
+    for(var p=0;p<pc;p++){
+      var sR=new THREE.Raycaster();var sxx=(Math.random()-.5)*wpn.spread*2,syy=(Math.random()-.5)*wpn.spread*2;
+      sR.setFromCamera(new THREE.Vector2(sxx,syy),camera);
+      var h2=sR.intersectObjects(aEM,false);
       if(h2.length>0){
-        const ho=h2[0].object;let te=null;
-        for(const e of enemies){if(e.isDead)continue;let f=false;e.mesh.traverse(c=>{if(c===ho)f=true;});if(f){te=e;break;}}
-        if(te){aH=true;const iH=ho.userData?.part==='head';if(iH)aHS=true;const dm=iH?wpn.dmgHead:wpn.dmgBody;te.health-=dm;score+=Math.floor(dm*.5);if(te.health<=0&&!te.isDead)killEnemy(te);}
+        var ho=h2[0].object;var te=null;
+        for(var ei=0;ei<enemies.length;ei++){if(enemies[ei].isDead)continue;var found=false;enemies[ei].mesh.traverse(function(c){if(c===ho)found=true;});if(found){te=enemies[ei];break;}}
+        if(te){aH=true;var iH=ho.userData&&ho.userData.part==='head';if(iH)aHS=true;var dm=iH?wpn.dmgHead:wpn.dmgBody;te.health-=dm;score+=Math.floor(dm*.5);if(te.health<=0&&!te.isDead)killEnemy(te);}
       }
     }
-    if(aH){dom.hitMarker.style.opacity=1;dom.hitMarker.style.color=aHS?'#ff0000':'#fff';if(aHS)sfxHeadshot();else sfxHit();setTimeout(()=>dom.hitMarker.style.opacity=0,140);}
+    if(aH){dom.hitMarker.style.opacity=1;dom.hitMarker.style.color=aHS?'#ff0000':'#fff';if(aHS)sfxHeadshot();else sfxHit();setTimeout(function(){dom.hitMarker.style.opacity=0;},140);}
   }
   weaponGroup.position.z=THREE.MathUtils.lerp(weaponGroup.position.z,-.32,.12);fireTimer-=cd;
-  if(isReloading){reloadTimer-=cd;if(reloadTimer<=0){const n=wpn.mag-stA.mag;const g=Math.min(n,stA.reserve);stA.mag+=g;stA.reserve-=g;isReloading=false;}}
-
+  if(isReloading){reloadTimer-=cd;if(reloadTimer<=0){var n=wpn.mag-stA.mag;var g=Math.min(n,stA.reserve);stA.mag+=g;stA.reserve-=g;isReloading=false;}}
   updateEnemies(cd);updateProjectiles(cd);updatePickups(cd);updateZone(cd);checkWinLoss();
   dom.lowHpVignette.style.opacity=health<30?(.5+Math.sin(performance.now()*.006)*.15):0;
-  dom.healthFill.style.width=`${Math.max(0,health)}%`;dom.healthText.textContent=`${Math.ceil(Math.max(0,health))} HP`;
-  dom.armorFill.style.width=`${armor}%`;dom.ammoCount.textContent=stA.mag;dom.ammoReserve.textContent=`/ ${stA.reserve}`;
-  dom.waveNum.textContent=wave;dom.killCount.textContent=kills;dom.scoreDisplay.textContent=score;
-  drawMinimap();
+  dom.healthFill.style.width=Math.max(0,health)+'%';dom.healthText.textContent=Math.ceil(Math.max(0,health))+' HP';
+  dom.armorFill.style.width=armor+'%';dom.ammoCount.textContent=stA.mag;dom.ammoReserve.textContent='/ '+stA.reserve;
+  dom.waveNum.textContent=wave;dom.killCount.textContent=kills;dom.scoreDisplay.textContent=score;drawMinimap();
 }
 
-/* ============================================================
-   START GAME
-============================================================ */
 function startGame(){
-  initAudio();
-  document.getElementById('startScreen').style.display='none';
-  document.getElementById('hud').style.display='block';
+  initAudio();document.getElementById('startScreen').style.display='none';document.getElementById('hud').style.display='block';
   if(isMobile)document.getElementById('touchControls').style.display='block';
   health=MAX_HEALTH;armor=0;kills=0;score=0;wave=1;
   playerPos.set(WORLD_SIZE/2,1.7,WORLD_SIZE/2);playerVelY=0;cameraYaw=0;cameraPitch=0;
   isFiring=false;isReloading=false;isADS=false;targetFov=75;isCrouching=false;screenShake=0;
-  for(const e of enemies){scene.remove(e.mesh);e.hpBar.remove();e.nameTag.remove();}enemies.length=0;
-  for(const p of enemyProjectiles)scene.remove(p.mesh);enemyProjectiles.length=0;
-  for(const p of pickups)scene.remove(p.mesh);pickups.length=0;
-  initAmmoState();switchWeapon('rifle');
-  dom.killCount.textContent='0';dom.scoreDisplay.textContent='0';dom.waveNum.textContent='1';
-  if(gameMode==='br'){
-    dom.zoneTimer.style.display='block';dom.playerCountTop.style.display='block';initZone();
-    const c=39;waveEnemiesAlive=c;for(let i=0;i<c;i++)spawnEnemy();
-  } else {
-    dom.zoneTimer.style.display='none';dom.playerCountTop.style.display='none';
-    const c=8;waveEnemiesAlive=c;for(let i=0;i<c;i++)spawnEnemy();announceWave('WAVE 1','#90ee90');
-  }
+  for(var i=0;i<enemies.length;i++){scene.remove(enemies[i].mesh);enemies[i].hpBar.remove();enemies[i].nameTag.remove();}enemies.length=0;
+  for(var i=0;i<enemyProjectiles.length;i++)scene.remove(enemyProjectiles[i].mesh);enemyProjectiles.length=0;
+  for(var i=0;i<pickups.length;i++)scene.remove(pickups[i].mesh);pickups.length=0;
+  initAmmoState();switchWeapon('rifle');dom.killCount.textContent='0';dom.scoreDisplay.textContent='0';dom.waveNum.textContent='1';
+  if(gameMode==='br'){dom.zoneTimer.style.display='block';dom.playerCountTop.style.display='block';initZone();var c=39;waveEnemiesAlive=c;for(var i=0;i<c;i++)spawnEnemy();}
+  else{dom.zoneTimer.style.display='none';dom.playerCountTop.style.display='none';var c=8;waveEnemiesAlive=c;for(var i=0;i<c;i++)spawnEnemy();announceWave('WAVE 1','#90ee90');}
   gameActive=true;
 }
 
-/* ============================================================
-   INIT & LOOP
-============================================================ */
-document.querySelectorAll('.mode-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');gameMode=btn.dataset.mode;});});
+document.querySelectorAll('.mode-btn').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');gameMode=btn.dataset.mode;});});
 document.getElementById('startBtn').addEventListener('click',startGame);
-document.getElementById('respawnBtn').addEventListener('click',()=>{document.getElementById('deathScreen').style.display='none';startGame();});
+document.getElementById('respawnBtn').addEventListener('click',function(){document.getElementById('deathScreen').style.display='none';startGame();});
 
 initThree();generateWorld();createWeapon();initControls();
 
-// Load GLB model then enable start button
-loadSoldierModel().then(()=>{
-  const btn=document.getElementById('startBtn');
-  btn.disabled=false;btn.textContent='DROP IN';
-  document.getElementById('loadingStatus').textContent=useGlb?'Soldier model ready':'Using legacy models';
-}).catch(()=>{
-  const btn=document.getElementById('startBtn');
-  btn.disabled=false;btn.textContent='DROP IN';
-  document.getElementById('loadingStatus').textContent='';
+loadSoldierModel().then(function(){
+  if(!useGlb){
+    document.getElementById('loadingStatus').textContent='ERROR: soldier.glb failed to load';
+    document.getElementById('startBtn').textContent='MODEL MISSING';
+    document.getElementById('startBtn').disabled=true;
+    return;
+  }
+  document.getElementById('loadingStatus').textContent='Soldier model loaded';
+  document.getElementById('startBtn').disabled=false;
+  document.getElementById('startBtn').textContent='DROP IN';
+}).catch(function(err){
+  document.getElementById('loadingStatus').textContent='LOAD ERROR: '+err;
+  document.getElementById('startBtn').textContent='MODEL MISSING';
+  document.getElementById('startBtn').disabled=true;
 });
 
-let lastTime=0;
-function animate(time){requestAnimationFrame(animate);const dt=Math.min((time-lastTime)/1000,.1);lastTime=time;if(gameActive)updateGame(dt);renderer.render(scene,camera);}
+var lastTime=0;
+function animate(time){requestAnimationFrame(animate);var dt=Math.min((time-lastTime)/1000,.1);lastTime=time;if(gameActive)updateGame(dt);renderer.render(scene,camera);}
 animate(0);
 </script>
 </body>
