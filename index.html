@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>WARZONE: LOW POLY TACTICAL 3.0</title>
+<title>WARZONE: LOW POLY TACTICAL 4.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
   body { overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', system-ui, sans-serif; width: 100vw; height: 100vh; position: fixed; }
@@ -21,6 +21,7 @@
   .controls-info span { color: #90ee90; font-weight: 700; margin-right: 8px; display: inline-block; width: 95px; }
   #startBtn { margin-top: 16px; padding: 16px 56px; font-size: 20px; font-weight: 900; letter-spacing: 4px; background: #90ee90; color: #111; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase; transition: transform 0.1s; }
   #startBtn:active { transform: scale(0.95); }
+  #layoutBtn { margin-top: 12px; padding: 10px 20px; font-size: 14px; font-weight: 800; background: #333; color: #fff; border: 1px solid #555; border-radius: 6px; cursor: pointer; }
 
   #hud { position: fixed; inset: 0; z-index: 100; pointer-events: none; }
   #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); --spread: 4px; --ch-color: #fff; }
@@ -31,7 +32,7 @@
   .ch-left { width: 8px; height: 2px; top: -1px; left: calc(-12px - var(--spread)); }
   .ch-dot { width: 4px; height: 4px; background: var(--ch-color); position: absolute; left: -2px; top: -2px; border-radius: 50%; transition: background 0.15s; }
 
-  #topLeftHud { position: absolute; top: 16px; left: 16px; display: flex; flex-direction: column; gap: 10px; }
+  #topLeftHud { position: absolute; top: 16px; left: 16px; display: flex; flex-direction: column; gap: 10px; transform-origin: top left; }
   #statsDisplay { font-size: 14px; font-weight: 800; color: #fff; background: rgba(30,30,35,0.75); padding: 10px 16px; border-radius: 8px; display: flex; gap: 18px; backdrop-filter: blur(4px); }
   #statsDisplay .stat-label { color: #aaa; font-size: 10px; display: block; letter-spacing: 1px; }
   #statsDisplay .stat-val { color: #90ee90; font-size: 20px; font-weight: 900; }
@@ -50,11 +51,13 @@
   #zoneTimer .zt-val { color: #ffcc44; font-size: 17px; font-weight: 900; }
   #zoneTimer.shrinking .zt-val { color: #ff4444; }
 
-  #playerCountTop { position: absolute; top: 16px; right: 154px; background: rgba(30,30,35,0.75); padding: 10px 14px; border-radius: 8px; text-align: right; backdrop-filter: blur(4px); }
+  #playerCountTop { position: absolute; top: 16px; right: 154px; background: rgba(30,30,35,0.75); padding: 10px 14px; border-radius: 8px; text-align: right; backdrop-filter: blur(4px); transform-origin: top right; }
   #playerCountTop .pc-label { color: #aaa; font-size: 9px; display: block; letter-spacing: 1px; }
   #playerCountTop .pc-val { color: #ff8844; font-size: 17px; font-weight: 900; }
 
-  #minimap { position: absolute; top: 16px; right: 16px; width: 150px; height: 150px; border: 3px solid rgba(255,255,255,0.5); border-radius: 4px; background: rgba(0,0,0,0.7); pointer-events: none; backdrop-filter: blur(2px); }
+  #compass { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 4px; color: #fff; font-weight: 800; font-size: 14px; letter-spacing: 2px; border: 1px solid rgba(255,255,255,0.2); }
+
+  #minimap { position: absolute; top: 16px; right: 16px; width: 150px; height: 150px; border: 3px solid rgba(255,255,255,0.5); border-radius: 4px; background: rgba(0,0,0,0.7); pointer-events: none; backdrop-filter: blur(2px); transform-origin: top right; }
 
   #killFeed { position: absolute; top: 180px; right: 16px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; max-width: 220px; }
   .kf-entry { background: rgba(20,20,25,0.75); color: #fff; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 4px; border-right: 3px solid #ff4444; opacity: 0; animation: kfFade 4s ease forwards; white-space: nowrap; }
@@ -74,13 +77,13 @@
 
   #touchControls { position: fixed; inset: 0; z-index: 200; pointer-events: none; }
   #joystickArea { position: absolute; bottom: 0; left: 0; width: 40%; height: 60%; pointer-events: auto; }
-  #joystickBase { width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.25); position: absolute; left: 36px; bottom: 36px; }
+  #joystickBase { width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.25); position: absolute; left: 36px; bottom: 36px; transform-origin: bottom left; }
   #joystickKnob { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.75); position: absolute; left: 44px; top: 44px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
   #lookArea { position: absolute; inset: 0; left: 30%; pointer-events: auto; z-index: 1; }
   .action-btn { position: absolute; border-radius: 50%; background: rgba(30,30,35,0.55); border: 2px solid rgba(255,255,255,0.25); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; pointer-events: auto; cursor: pointer; backdrop-filter: blur(4px); transition: transform 0.05s, background 0.1s; font-size: 13px; touch-action: none; z-index: 2; }
   .action-btn:active { transform: scale(0.88); }
-  #fireBtn { bottom: 55px; right: 50px; width: 90px; height: 90px; border-color: #ff4444; color: #ff4444; font-size: 16px; letter-spacing: 1px; }
-  #sprintBtn { border-color: #44ff88; color: #44ff88; }
+  #fireBtn { bottom: 55px; right: 50px; width: 90px; height: 90px; border-color: #ff4444; color: #ff4444; font-size: 16px; letter-spacing: 1px; transform-origin: bottom right; }
+  #sprintBtn { border-color: #44ff88; color: #44ff88; transform-origin: bottom right; }
   #sprintBtn.active { background: rgba(68, 255, 136, 0.3); color: #fff; }
   .draggable-btn { position: absolute; }
 
@@ -105,7 +108,23 @@
   .death-stats { color: #ccc; font-size: 15px; margin-top: 8px; letter-spacing: 1px; }
   #respawnBtn { margin-top: 30px; padding: 16px 48px; font-size: 18px; font-weight: 900; background: #90ee90; color: #111; border: none; border-radius: 6px; cursor: pointer; }
 
-  #muteBtn { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 1001; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+  #muteBtn { position: fixed; top: 16px; right: 180px; z-index: 1001; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+
+  /* LAYOUT EDITOR */
+  #editModal { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 2px solid #90ee90; padding: 15px; border-radius: 8px; z-index: 2000; display: none; flex-direction: column; gap: 10px; align-items: center; color: #fff; }
+  #editModal h3 { color: #90ee90; font-size: 16px; letter-spacing: 2px; }
+  #editActiveEl { color: #ffcc44; font-weight: 800; }
+  .edit-controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .edit-btn { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 12px; }
+  .edit-btn.save { background: #90ee90; color: #111; }
+  .edit-btn.reset { background: #ff4444; color: #fff; }
+  .editing #joystickArea, .editing #lookArea { pointer-events: none !important; }
+  .editing .action-btn, .editing #joystickBase, .editing #minimap, .editing #topLeftHud, .editing #playerCountTop { 
+    border: 2px dashed cyan !important; 
+    pointer-events: auto !important; 
+    z-index: 1500 !important; 
+  }
+  .editing .action-btn { background: rgba(0,0,0,0.8) !important; }
 </style>
 </head>
 <body>
@@ -113,29 +132,27 @@
 <div id="startScreen">
   <div class="start-content">
     <h1>LOW POLY WARZONE</h1>
-    <p class="subtitle">TACTICAL SURVIVAL 3.0</p>
+    <p class="subtitle">TACTICAL SURVIVAL 4.0</p>
     <div class="mode-select">
       <button class="mode-btn active" data-mode="br">BATTLE ROYALE</button>
       <button class="mode-btn" data-mode="survival">WAVE SURVIVAL</button>
     </div>
     <div class="controls-info">
-      <div><span>MOVE</span> WASD / Joystick</div>
-      <div><span>SPRINT</span> Shift (Hold) / Run Btn (Toggle)</div>
-      <div><span>AIM</span> Mouse / Right Side Swipe</div>
-      <div><span>FIRE</span> Click / Fire Btn</div>
+      <div><span>MOVE</span> WASD / Left Joystick</div>
+      <div><span>LOOK</span> Mouse / Right Screen Drag</div>
+      <div><span>FIRE</span> Auto / Fire Btn (Drag to aim!)</div>
+      <div><span>SPRINT</span> Shift / Run Btn (Toggle)</div>
       <div><span>ADS</span> Right Mouse / Scope Btn</div>
       <div><span>JUMP</span> Space / Jump Btn</div>
-      <div><span>RELOAD</span> R / Reload Btn</div>
       <div><span>SWITCH</span> 1-5 / SWP Btn</div>
-      <div><span>CROUCH</span> C / Duck Btn</div>
-      <div><span>LOOT</span> Walk near crates to open</div>
-      <div><span>DRAG</span> Hold a button 0.5s to move it</div>
+      <div><span>LOOT</span> Walk near glowing crates</div>
     </div>
     <button id="startBtn">DROP IN</button>
+    <br><button id="layoutBtn">⚙️ CUSTOMIZE LAYOUT</button>
   </div>
 </div>
 
-<button id="muteBtn">🔊 SOUND ON</button>
+<button id="muteBtn">🔊</button>
 
 <div id="hud" style="display:none">
   <div id="crosshair">
@@ -145,6 +162,8 @@
     <div class="ch-line ch-left"></div>
     <div class="ch-dot"></div>
   </div>
+
+  <div id="compass">N</div>
 
   <div id="topLeftHud">
     <div id="statsDisplay">
@@ -203,15 +222,26 @@
 <div id="lobbyUI">
   <div id="lobbyInfo">
     <h2>STAGING AREA</h2>
-    <p>Press JUMP to drop into the battlefield</p>
+    <p>Press DROP to enter the battlefield</p>
   </div>
-  <button id="dropBtn">JUMP!</button>
+  <button id="dropBtn">DROP!</button>
 </div>
 
 <div id="deathScreen">
   <h2 id="deathTitle">SQUAD ELIMINATED</h2>
   <p class="death-stats" id="deathStats"></p>
   <button id="respawnBtn">PLAY AGAIN</button>
+</div>
+
+<div id="editModal">
+  <h3>LAYOUT EDITOR</h3>
+  <div>Selected: <span id="editActiveEl">None</span></div>
+  <div class="edit-controls">
+    <button class="edit-btn" onclick="changeSize(0.1)">Size +</button>
+    <button class="edit-btn" onclick="changeSize(-0.1)">Size -</button>
+    <button class="edit-btn reset" onclick="resetLayout()">Reset</button>
+    <button class="edit-btn save" onclick="saveLayout()">Save & Exit</button>
+  </div>
 </div>
 
 <script type="importmap">
@@ -255,6 +285,7 @@ function sfxJump(){ playSound(0,0.08,0.15,0.8); }
 function sfxPickup(){ playSound(1000,0.06,0.2,0); playSound(1500,0.05,0.15,0); }
 function sfxZoneShrink(){ playSound(200,1.0,0.2,0.15); }
 function sfxVictory(){ [0,150,300,450].forEach((d,i)=>setTimeout(()=>playSound(440+i*110,0.4,0.3,0),d)); }
+function sfxFootstep(){ playSound(60,0.04,0.12,0.2); }
 
 /* ============================================================
    CONFIG
@@ -297,6 +328,7 @@ let weaponGroup, muzzleFlash;
 let lobbyPlatform = null;
 const enemies=[], colliders=[], enemyProjectiles=[], pickups=[], damageNumbers=[];
 let screenShake=0, crosshairOnEnemy=false;
+let footstepTimer = 0, lastDamageTime = 0;
 
 let zoneCenter = new THREE.Vector3(WORLD_SIZE/2, 0, WORLD_SIZE/2);
 let zoneRadius = WORLD_SIZE*0.7, zoneTargetRadius = zoneRadius, zonePhaseTimer=40, zonePhase=0;
@@ -319,8 +351,140 @@ const dom = {
   nameTags: document.getElementById('nameTags'),
   lootMenu: document.getElementById('lootMenu'),
   lootItems: document.getElementById('lootItems'),
-  sprintBtn: document.getElementById('sprintBtn')
+  sprintBtn: document.getElementById('sprintBtn'),
+  compass: document.getElementById('compass')
 };
+
+/* ============================================================
+   LAYOUT EDITOR SYSTEM
+============================================================ */
+const customEls = ['fireBtn', 'jumpBtn', 'crouchBtn', 'reloadBtn', 'scopeBtn', 'sprintBtn', 'switchBtn', 'minimap', 'topLeftHud', 'playerCountTop', 'joystickBase'];
+let activeEditEl = null;
+let editMode = false;
+let dragEditEl = null, editOffsetX = 0, editOffsetY = 0;
+
+function loadLayout() {
+  try {
+    const saved = localStorage.getItem('warzoneLayout');
+    if(!saved) return;
+    const layout = JSON.parse(saved);
+    customEls.forEach(id => {
+      const el = document.getElementById(id);
+      if(layout[id]) {
+        el.style.left = layout[id].x + 'px';
+        el.style.top = layout[id].y + 'px';
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+        el.style.transform = `scale(${layout[id].scale})`;
+        el.style.transformOrigin = layout[id].origin || 'center center';
+      }
+    });
+  } catch(e) { console.error("Layout load failed", e); }
+}
+
+function saveLayout() {
+  const layout = {};
+  customEls.forEach(id => {
+    const el = document.getElementById(id);
+    const rect = el.getBoundingClientRect();
+    const scaleMatch = el.style.transform.match(/scale\(([^)]+)\)/);
+    layout[id] = {
+      x: rect.left,
+      y: rect.top,
+      scale: scaleMatch ? parseFloat(scaleMatch[1]) : 1,
+      origin: el.style.transformOrigin || 'center center'
+    };
+  });
+  localStorage.setItem('warzoneLayout', JSON.stringify(layout));
+  alert('Layout Saved!');
+  exitEditMode();
+}
+
+function resetLayout() {
+  localStorage.removeItem('warzoneLayout');
+  customEls.forEach(id => {
+    const el = document.getElementById(id);
+    el.style.left = '';
+    el.style.top = '';
+    el.style.right = '';
+    el.style.bottom = '';
+    el.style.transform = '';
+  });
+  alert('Layout Reset to Default!');
+}
+
+function enterEditMode() {
+  editMode = true;
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('hud').style.display = 'block';
+  document.getElementById('touchControls').style.display = 'block';
+  document.getElementById('editModal').style.display = 'flex';
+  document.body.classList.add('editing');
+  customEls.forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('mousedown', startDragEdit);
+    el.addEventListener('touchstart', startDragEdit, {passive: false});
+  });
+}
+
+function exitEditMode() {
+  editMode = false;
+  document.getElementById('editModal').style.display = 'none';
+  document.body.classList.remove('editing');
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('touchControls').style.display = 'none';
+  customEls.forEach(id => {
+    const el = document.getElementById(id);
+    el.removeEventListener('mousedown', startDragEdit);
+    el.removeEventListener('touchstart', startDragEdit);
+  });
+}
+
+function startDragEdit(e) {
+  e.preventDefault();
+  const t = e.touches ? e.touches[0] : e;
+  dragEditEl = e.currentTarget;
+  activeEditEl = dragEditEl.id;
+  document.getElementById('editActiveEl').textContent = activeEditEl;
+  const rect = dragEditEl.getBoundingClientRect();
+  editOffsetX = t.clientX - rect.left;
+  editOffsetY = t.clientY - rect.top;
+  window.addEventListener('touchmove', dragMoveEdit, {passive: false});
+  window.addEventListener('mousemove', dragMoveEdit);
+  window.addEventListener('touchend', endDragEdit);
+  window.addEventListener('mouseup', endDragEdit);
+}
+
+function dragMoveEdit(e) {
+  if(!dragEditEl) return;
+  e.preventDefault();
+  const t = e.touches ? e.touches[0] : e;
+  dragEditEl.style.left = (t.clientX - editOffsetX) + 'px';
+  dragEditEl.style.top = (t.clientY - editOffsetY) + 'px';
+  dragEditEl.style.right = 'auto';
+  dragEditEl.style.bottom = 'auto';
+}
+
+function endDragEdit() {
+  dragEditEl = null;
+  window.removeEventListener('touchmove', dragMoveEdit);
+  window.removeEventListener('mousemove', dragMoveEdit);
+  window.removeEventListener('touchend', endDragEdit);
+  window.removeEventListener('mouseup', endDragEdit);
+}
+
+window.changeSize = function(delta) {
+  if(!activeEditEl) return alert('Select an element first by tapping it.');
+  const el = document.getElementById(activeEditEl);
+  const curScale = (el.style.transform.match(/scale\(([^)]+)\)/) || [])[1] || 1;
+  let newScale = parseFloat(curScale) + delta;
+  newScale = Math.max(0.5, Math.min(2.5, newScale));
+  el.style.transform = `scale(${newScale})`;
+};
+
+document.getElementById('layoutBtn').addEventListener('click', enterEditMode);
+document.querySelector('.edit-btn.save').addEventListener('click', saveLayout);
+document.querySelector('.edit-btn.reset').addEventListener('click', resetLayout);
 
 /* ============================================================
    TERRAIN
@@ -333,8 +497,8 @@ function getGroundHeight(wx,wz){
 function clampToWorld(v){ return Math.max(1, Math.min(WORLD_SIZE-1, v)); }
 
 function initThree(){
-  scene = new THREE.Scene(); scene.background = new THREE.Color(0x87CEEB); scene.fog = new THREE.FogExp2(0x87CEEB, 0.0035); // Reduced fog to prevent pitch black horizon
-  camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 700); camera.rotation.order='YXZ'; // Increased far plane
+  scene = new THREE.Scene(); scene.background = new THREE.Color(0x87CEEB); scene.fog = new THREE.FogExp2(0x87CEEB, 0.0035);
+  camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 700); camera.rotation.order='YXZ';
   renderer = new THREE.WebGLRenderer({ antialias:false, powerPreference:'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight);
   document.body.prepend(renderer.domElement);
@@ -389,7 +553,7 @@ function addVegetation(cx, cz, gh, radius){
 }
 
 /* ============================================================
-   WORLD GENERATION (boulders + rocks + vegetation + variations)
+   WORLD GENERATION
 ============================================================ */
 function generateWorld(){
   const planeGeo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, 80, 80); planeGeo.rotateX(-Math.PI/2);
@@ -406,7 +570,6 @@ function generateWorld(){
     const roll = Math.random();
 
     if(roll < 0.25){
-      // Large boulder
       const size = 2+Math.random()*4;
       const rockMat = [sharedMats.rockA, sharedMats.rockB, sharedMats.rockC, sharedMats.rockD][Math.floor(Math.random()*4)];
       const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(size,0), rockMat);
@@ -417,7 +580,6 @@ function generateWorld(){
       colliders.push({ minX:cx-size*0.8, maxX:cx+size*0.8, minZ:cz-size*0.8, maxZ:cz+size*0.8, maxY:gh+size });
       addVegetation(cx, cz, gh, size);
     } else if(roll < 0.5){
-      // Rock cluster / mountain outcrop
       const clusterSize = 2+Math.floor(Math.random()*3);
       for(let r=0;r<clusterSize;r++){
         const rx=cx+(Math.random()-0.5)*6, rz=cz+(Math.random()-0.5)*6, rSize=1+Math.random()*2.5;
@@ -432,7 +594,6 @@ function generateWorld(){
       }
       addVegetation(cx, cz, gh, 4);
     } else if(roll < 0.7){
-      // Small stone outcrop
       const sSize = 0.8+Math.random()*1.5;
       const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(sSize,0), sharedMats.rockB);
       rock.position.set(cx, gh+sSize*0.3, cz);
@@ -441,7 +602,6 @@ function generateWorld(){
       colliders.push({ minX:cx-sSize, maxX:cx+sSize, minZ:cz-sSize, maxZ:cz+sSize, maxY:gh+sSize+0.5 });
       addVegetation(cx, cz, gh, sSize+1);
     } else if(roll < 0.85) {
-      // Rock Arch
       const r1 = new THREE.Mesh(new THREE.DodecahedronGeometry(3,0), sharedMats.rockA);
       r1.position.set(cx-2.5, gh+3, cz); r1.rotation.z = 0.2; scene.add(r1);
       const r2 = new THREE.Mesh(new THREE.DodecahedronGeometry(3,0), sharedMats.rockB);
@@ -451,7 +611,6 @@ function generateWorld(){
       colliders.push({ minX:cx-4, maxX:cx+4, minZ:cz-1.5, maxZ:cz+1.5, maxY:gh+8 });
       addVegetation(cx, cz, gh, 5);
     } else {
-      // Dead Tree
       const trH = 3 + Math.random()*4;
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.3, trH, 5), sharedMats.trunk);
       trunk.position.set(cx, gh+trH/2, cz); scene.add(trunk);
@@ -460,7 +619,6 @@ function generateWorld(){
     }
   }
 
-  // Scattered small rocks and crates
   for(let i=0;i<160;i++){
     const cx=5+Math.random()*(WORLD_SIZE-10), cz=5+Math.random()*(WORLD_SIZE-10), gh=getGroundHeight(cx,cz);
     if(Math.random()<0.5){
@@ -475,7 +633,6 @@ function generateWorld(){
     }
   }
 
-  // Walls — solid, opaque, extended downward
   const wallH = 120, wallY = 30;
   const bw = 3;
   const wallMat = new THREE.MeshStandardMaterial({color:0x4a5560, flatShading:true, roughness:0.9});
@@ -668,18 +825,12 @@ function updateEnemyTarget(e){
 
   const distToPlayer = e.mesh.position.distanceTo(playerPos);
 
-  // Priority 1: If player is very close (< 20 units) and closer than any enemy, target player
   if(distToPlayer < 20) {
     if(!closestEnemy || distToPlayer < closestEnemyDist) {
-      e.target = 'player';
-      return;
+      e.target = 'player'; return;
     }
   }
-
-  // Priority 2: Closest enemy of opposite faction
   if(closestEnemy) { e.target = closestEnemy; return; }
-
-  // Priority 3: Player if within 30 units (wider range)
   if(distToPlayer < 30) { e.target = 'player'; return; }
 
   e.target = null;
@@ -715,9 +866,11 @@ function checkCollisions(px, pz, rad=PLAYER_RADIUS){
 }
 
 /* ============================================================
-   CONTROLS
+   CONTROLS (DYNAMIC FIRE BUTTON AIM)
 ============================================================ */
 let joyX=0, joyY=0, jCenter=null, jTouchId=null, lookTouchId=null, lookLastX=0, lookLastY=0;
+let fireLookId = null, fireLookX = 0, fireLookY = 0;
+
 function doJump(){ if(isGrounded && gameActive && gamePhase==='playing'){ playerVelY=9; isGrounded=false; isCrouching=false; sfxJump(); } }
 function doReload(){
   const st = ammoState[currentWeaponKey], w = WEAPONS[currentWeaponKey];
@@ -744,15 +897,48 @@ function initControls(){
   const resetJoy = e=>{ for(const t of e.changedTouches) if(t.identifier===jTouchId){ jTouchId=null; joyX=0; joyY=0; jKnob.style.transform='translate(0,0)'; jCenter=null; } };
   jArea.addEventListener('touchend', resetJoy); jArea.addEventListener('touchcancel', resetJoy);
 
-  // Expanded look area to allow looking while firing with a second finger
   const lArea = document.getElementById('lookArea');
   lArea.addEventListener('touchstart', e=>{ e.preventDefault(); for(const t of e.changedTouches) if(!lookTouchId && (t.target===lArea || t.target.tagName==='CANVAS')) { lookTouchId=t.identifier; lookLastX=t.clientX; lookLastY=t.clientY; } }, {passive:false});
   lArea.addEventListener('touchmove', e=>{ e.preventDefault(); for(const t of e.changedTouches) if(t.identifier===lookTouchId){ cameraYaw -= (t.clientX-lookLastX)*0.0045; cameraPitch -= (t.clientY-lookLastY)*0.0045; cameraPitch=Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, cameraPitch)); lookLastX=t.clientX; lookLastY=t.clientY; } }, {passive:false});
   const resetLook = e=>{ for(const t of e.changedTouches) if(t.identifier===lookTouchId) lookTouchId=null; };
   lArea.addEventListener('touchend', resetLook); lArea.addEventListener('touchcancel', resetLook);
 
+  // --- FIRE BUTTON (DRAG TO AIM) ---
+  const fireBtn = document.getElementById('fireBtn');
+  fireBtn.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if(fireLookId === null) {
+      const t = e.changedTouches[0];
+      fireLookId = t.identifier;
+      fireLookX = t.clientX;
+      fireLookY = t.clientY;
+      isFiring = true;
+    }
+  }, {passive: false});
+  fireBtn.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for(const t of e.changedTouches) {
+      if(t.identifier === fireLookId) {
+        cameraYaw -= (t.clientX - fireLookX) * 0.005;
+        cameraPitch -= (t.clientY - fireLookY) * 0.005;
+        cameraPitch = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, cameraPitch));
+        fireLookX = t.clientX;
+        fireLookY = t.clientY;
+      }
+    }
+  }, {passive: false});
+  const fireEnd = e => {
+    for(const t of e.changedTouches) {
+      if(t.identifier === fireLookId) {
+        fireLookId = null;
+        isFiring = false;
+      }
+    }
+  };
+  fireBtn.addEventListener('touchend', fireEnd);
+  fireBtn.addEventListener('touchcancel', fireEnd);
+
   const bindBtn = (id, start, end) => { const el=document.getElementById(id); el.addEventListener('touchstart', e=>{ e.preventDefault(); start(); }); if(end) el.addEventListener('touchend', e=>{ e.preventDefault(); end(); }); };
-  bindBtn('fireBtn', ()=>isFiring=true, ()=>isFiring=false);
   bindBtn('jumpBtn', doJump);
   bindBtn('crouchBtn', ()=>isCrouching=!isCrouching);
   bindBtn('reloadBtn', doReload);
@@ -792,21 +978,11 @@ function initControls(){
   window.keys = {};
   window.addEventListener('keydown', e=>window.keys[e.code]=true);
   window.addEventListener('keyup', e=>window.keys[e.code]=false);
-
-  document.querySelectorAll('.draggable-btn').forEach(btn=>{
-    let holdTimer=null, dragging=false, startX,startY,origLeft,origTop;
-    const onDown = e=>{ e.preventDefault(); const t=e.touches?e.touches[0]:e; holdTimer=setTimeout(()=>{ dragging=true; btn.style.transition='none'; const rect=btn.getBoundingClientRect(); origLeft=rect.left; origTop=rect.top; startX=t.clientX; startY=t.clientY; },500); };
-    const onMove = e=>{ if(!dragging) return; e.preventDefault(); const t=e.touches?e.touches[0]:e; const dx=t.clientX-startX, dy=t.clientY-startY; btn.style.left=(origLeft+dx)+'px'; btn.style.top=(origTop+dy)+'px'; btn.style.right='auto'; btn.style.bottom='auto'; };
-    const onUp = ()=>{ clearTimeout(holdTimer); if(dragging){ dragging=false; btn.style.transition=''; } };
-    btn.addEventListener('touchstart', onDown); btn.addEventListener('mousedown', onDown);
-    window.addEventListener('touchmove', onMove); window.addEventListener('mousemove', onMove);
-    window.addEventListener('touchend', onUp); window.addEventListener('mouseup', onUp);
-  });
 }
 
 document.getElementById('muteBtn').addEventListener('click', ()=>{
   soundEnabled = !soundEnabled;
-  document.getElementById('muteBtn').textContent = soundEnabled ? '🔊 SOUND ON' : '🔇 SOUND OFF';
+  document.getElementById('muteBtn').textContent = soundEnabled ? '🔊' : '🔇';
 });
 
 /* ============================================================
@@ -871,9 +1047,18 @@ function spawnPickup(pos, type){
 }
 function spawnLootCrateWeapon(pos){
   const weaponKey = WEAPON_KEYS[Math.floor(Math.random()*WEAPON_KEYS.length)];
+  const grp = new THREE.Group();
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,0.8), new THREE.MeshStandardMaterial({ color:0xccaa44, flatShading:true, emissive:0x221800 }));
-  mesh.position.copy(pos); mesh.userData = { type:'weapon', weaponKey, bobOffset: Math.random()*Math.PI*2 };
-  scene.add(mesh); pickups.push({ mesh, type:'weapon', weaponKey, life:9999 });
+  grp.add(mesh);
+  // Loot beam
+  const beamGeo = new THREE.CylinderGeometry(0.5, 0.1, 15, 6, 1, true);
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+  const beam = new THREE.Mesh(beamGeo, beamMat);
+  beam.position.y = 7.5;
+  grp.add(beam);
+  
+  grp.position.copy(pos); grp.userData = { type:'weapon', weaponKey, bobOffset: Math.random()*Math.PI*2 };
+  scene.add(grp); pickups.push({ mesh: grp, type:'weapon', weaponKey, life:9999 });
 }
 
 let nearbyCrate = null;
@@ -932,38 +1117,44 @@ function drawMinimap(){
   ctx.fillStyle='rgba(150,150,150,0.4)';
   for(const col of colliders) if(col.maxY>5) ctx.fillRect(col.minX*scale, col.minZ*scale, Math.max((col.maxX-col.minX)*scale,1.5), Math.max((col.maxZ-col.minZ)*scale,1.5));
 
-  // Enemies (only if firing recently)
   for(const e of enemies){
     if(e.isDead) continue;
     if(performance.now() - e.lastFireTime < 3000) {
       ctx.fillStyle = e.faction===0?'#ff6666':'#6688ff';
       ctx.save();
       ctx.translate(e.mesh.position.x*scale, e.mesh.position.z*scale);
-      ctx.rotate(-e.mesh.rotation.y + Math.PI); // Adjust rotation to minimap
+      ctx.rotate(-e.mesh.rotation.y + Math.PI);
       ctx.beginPath();
-      ctx.moveTo(0, -3); // tip
-      ctx.lineTo(2, 2);  // right base
-      ctx.lineTo(-2, 2); // left base
-      ctx.closePath();
+      ctx.moveTo(0, -3); ctx.lineTo(2, 2); ctx.lineTo(-2, 2); ctx.closePath();
       ctx.fill();
       ctx.restore();
     }
   }
 
-  // Player (always visible)
   ctx.fillStyle='#00ff88';
   ctx.save();
   ctx.translate(playerPos.x*scale, playerPos.z*scale);
-  ctx.rotate(-cameraYaw); // Adjust rotation to minimap
+  ctx.rotate(-cameraYaw);
   ctx.beginPath();
-  ctx.moveTo(0, -4); // tip
-  ctx.lineTo(3, 3);  // right base
-  ctx.lineTo(-3, 3); // left base
-  ctx.closePath();
+  ctx.moveTo(0, -4); ctx.lineTo(3, 3); ctx.lineTo(-3, 3); ctx.closePath();
   ctx.fill();
   ctx.restore();
   
   ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=3; ctx.strokeRect(0,0,w,h);
+}
+
+function updateCompass() {
+  let deg = (cameraYaw * 180 / Math.PI) % 360;
+  if (deg < 0) deg += 360;
+  let dir = 'N';
+  if (deg >= 22.5 && deg < 67.5) dir = 'NE';
+  else if (deg >= 67.5 && deg < 112.5) dir = 'E';
+  else if (deg >= 112.5 && deg < 157.5) dir = 'SE';
+  else if (deg >= 157.5 && deg < 202.5) dir = 'S';
+  else if (deg >= 202.5 && deg < 247.5) dir = 'SW';
+  else if (deg >= 247.5 && deg < 292.5) dir = 'W';
+  else if (deg >= 292.5 && deg < 337.5) dir = 'NW';
+  dom.compass.textContent = dir;
 }
 
 /* ============================================================
@@ -1032,6 +1223,15 @@ function updateGame(dt){
   if(playerPos.y < gh + 0.3){ playerPos.y = gh + 0.3; playerVelY = Math.max(0, playerVelY); }
   playerPos.x = clampToWorld(playerPos.x); playerPos.z = clampToWorld(playerPos.z);
 
+  // Footsteps
+  if(moving && isGrounded) {
+    footstepTimer -= cappedDt;
+    if(footstepTimer <= 0) {
+      sfxFootstep();
+      footstepTimer = isSprinting ? 0.28 : 0.45;
+    }
+  }
+
   if(screenShake>0) screenShake = Math.max(0, screenShake - cappedDt*8);
   const shakeX=(Math.random()-0.5)*screenShake*0.3, shakeY=(Math.random()-0.5)*screenShake*0.3;
   camera.position.set(playerPos.x+shakeX, playerPos.y+shakeY, playerPos.z);
@@ -1050,7 +1250,14 @@ function updateGame(dt){
 
   if(gameMode === 'br'){
     const edgeDist = distFromZoneEdge(playerPos.x, playerPos.z);
-    if(edgeDist < 0){ health -= 5*cappedDt; dom.zoneDamageOverlay.style.opacity = 0.7; } else { dom.zoneDamageOverlay.style.opacity = 0; }
+    if(edgeDist < 0){ health -= 5*cappedDt; dom.zoneDamageOverlay.style.opacity = 0.7; } 
+    else {
+      dom.zoneDamageOverlay.style.opacity = 0;
+      // Auto-heal in safe zone
+      if(performance.now() - lastDamageTime > 8000 && health < MAX_HEALTH) {
+        health = Math.min(MAX_HEALTH, health + 2 * cappedDt);
+      }
+    }
   }
 
   const rc = new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(0,0), camera);
@@ -1132,6 +1339,7 @@ function updateGame(dt){
   updateLootMenu();
   updateZone(cappedDt);
   updateDamageNumbers(cappedDt);
+  updateCompass();
   checkWinLoss();
 
   dom.lowHpVignette.style.opacity = health < 30 ? (0.5 + Math.sin(performance.now()*0.006)*0.15) : 0;
@@ -1176,7 +1384,6 @@ function updateEnemies(dt){
       continue;
     }
 
-    // Zone damage to enemies
     if (gameMode === 'br' && distFromZoneEdge(e.mesh.position.x, e.mesh.position.z) < 0) {
       e.health -= 8 * dt;
       if (e.health <= 0 && !e.isDead) { killEnemy(e); continue; }
@@ -1266,6 +1473,7 @@ function updateProjectiles(dt){
       let dmg = p.dmg;
       if(armor > 0){ const absorbed = Math.min(armor, dmg*0.6); armor -= absorbed; dmg -= absorbed; }
       health -= dmg;
+      lastDamageTime = performance.now();
       showPlayerDamagePopup(dmg);
       const dmgPos = new THREE.Vector3(playerPos.x, playerPos.y-0.3, playerPos.z);
       spawnDamageNumber(dmgPos, Math.floor(dmg), false, true);
@@ -1456,6 +1664,7 @@ initThree();
 generateWorld();
 createWeapon();
 initControls();
+loadLayout();
 requestAnimationFrame(loop);
 
 document.querySelectorAll('.mode-btn').forEach(btn=>{
