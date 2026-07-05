@@ -3,9 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>WARZONE: LOW POLY TACTICAL 5.0</title>
+<!-- PWA & Mobile Web App Meta Tags (Prevents browser UI gestures) -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>WARZONE: LOW POLY TACTICAL 5.1</title>
 <style>
+  /* Added overscroll-behavior to prevent pull-to-refresh and browser swipe gestures */
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
+  html, body { overscroll-behavior: none; touch-action: none; }
   body { overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', system-ui, sans-serif; width: 100vw; height: 100vh; position: fixed; }
   canvas { display: block; }
 
@@ -79,7 +85,7 @@
   #joystickArea { position: absolute; bottom: 0; left: 0; width: 40%; height: 60%; pointer-events: auto; }
   #joystickBase { width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.25); position: absolute; left: 36px; bottom: 36px; transform-origin: bottom left; }
   #joystickKnob { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.75); position: absolute; left: 44px; top: 44px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-  #lookArea { position: absolute; inset: 0; left: 30%; pointer-events: auto; z-index: 1; }
+  #lookArea { position: absolute; inset: 0; left: 30%; pointer-events: auto; z-index: 1; touch-action: none; }
   .action-btn { position: absolute; border-radius: 50%; background: rgba(30,30,35,0.55); border: 2px solid rgba(255,255,255,0.25); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; pointer-events: auto; cursor: pointer; backdrop-filter: blur(4px); transition: transform 0.05s, background 0.1s; font-size: 13px; touch-action: none; z-index: 2; }
   .action-btn:active { transform: scale(0.88); }
   #fireBtn { bottom: 55px; right: 50px; width: 90px; height: 90px; border-color: #ff4444; color: #ff4444; font-size: 16px; letter-spacing: 1px; transform-origin: bottom right; }
@@ -108,7 +114,10 @@
   .death-stats { color: #ccc; font-size: 15px; margin-top: 8px; letter-spacing: 1px; }
   #respawnBtn { margin-top: 30px; padding: 16px 48px; font-size: 18px; font-weight: 900; background: #90ee90; color: #111; border: none; border-radius: 6px; cursor: pointer; }
 
-  #muteBtn { position: fixed; top: 16px; right: 180px; z-index: 1001; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+  /* Utility Buttons (Mute & Fullscreen) */
+  #muteBtn, #fullscreenBtn { position: fixed; top: 16px; z-index: 1001; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 6px 12px; font-size: 14px; cursor: pointer; }
+  #muteBtn { right: 185px; }
+  #fullscreenBtn { right: 230px; }
 
   /* LAYOUT EDITOR */
   #editModal { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 2px solid #90ee90; padding: 15px; border-radius: 8px; z-index: 2000; display: none; flex-direction: column; gap: 10px; align-items: center; color: #fff; }
@@ -132,7 +141,7 @@
 <div id="startScreen">
   <div class="start-content">
     <h1>LOW POLY WARZONE</h1>
-    <p class="subtitle">TACTICAL SURVIVAL 5.0</p>
+    <p class="subtitle">TACTICAL SURVIVAL 5.1</p>
     <div class="mode-select">
       <button class="mode-btn active" data-mode="br">BATTLE ROYALE</button>
       <button class="mode-btn" data-mode="survival">WAVE SURVIVAL</button>
@@ -153,6 +162,7 @@
 </div>
 
 <button id="muteBtn">🔊</button>
+<button id="fullscreenBtn">⛶</button>
 
 <div id="hud" style="display:none">
   <div id="crosshair">
@@ -355,8 +365,32 @@ const dom = {
   lootMenu: document.getElementById('lootMenu'),
   lootItems: document.getElementById('lootItems'),
   sprintBtn: document.getElementById('sprintBtn'),
-  compass: document.getElementById('compass')
+  compass: document.getElementById('compass'),
+  muteBtn: document.getElementById('muteBtn'),
+  fullscreenBtn: document.getElementById('fullscreenBtn')
 };
+
+/* ============================================================
+   FULLSCREEN & MUTE LOGIC
+============================================================ */
+dom.muteBtn.addEventListener('click', ()=>{
+  soundEnabled = !soundEnabled;
+  dom.muteBtn.textContent = soundEnabled ? '🔊' : '🔇';
+});
+
+dom.fullscreenBtn.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => {
+      alert(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
+    });
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+document.addEventListener('fullscreenchange', () => {
+  dom.fullscreenBtn.textContent = document.fullscreenElement ? '⤫' : '⛶';
+});
 
 /* ============================================================
    LAYOUT EDITOR SYSTEM
@@ -823,7 +857,7 @@ function spawnEnemy(etypeKey){
     const dx = x - playerPos.x; const dz = z - playerPos.z;
     if(Math.sqrt(dx*dx + dz*dz) > 25){
       valid = true;
-      for(const c of colliders){ if(x>c.minX-1 && x<c.maxX+1 && z>c.minZ-1 && z<c.maxZ+1 && c.maxY>3){ valid=false; break; } }
+      for(const c of colliders){ if(x>c.minX-1 && x<c.maxX+1 && z>c.minZ-1 && z>c.maxZ+1 && c.maxY>3){ valid=false; break; } }
     }
     tries++;
   }
@@ -1019,11 +1053,6 @@ function initControls(){
   window.addEventListener('keydown', e=>window.keys[e.code]=true);
   window.addEventListener('keyup', e=>window.keys[e.code]=false);
 }
-
-document.getElementById('muteBtn').addEventListener('click', ()=>{
-  soundEnabled = !soundEnabled;
-  document.getElementById('muteBtn').textContent = soundEnabled ? '🔊' : '🔇';
-});
 
 /* ============================================================
    TRACERS & DAMAGE NUMBERS
