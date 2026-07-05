@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>WARZONE: LOW POLY TACTICAL 6.1</title>
+<title>WARZONE: LOW POLY TACTICAL 7.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
   html, body { overscroll-behavior: none; touch-action: none; }
@@ -156,7 +156,7 @@
 <div id="menuUI">
   <div id="menuTitle">
     <h1>WARZONE</h1>
-    <p>LOW POLY TACTICAL 6.1</p>
+    <p>LOW POLY TACTICAL 7.0</p>
   </div>
   
   <div class="menu-btns" id="mainMenuBtns">
@@ -431,15 +431,17 @@ window.copyPeerId = () => { navigator.clipboard.writeText(document.getElementByI
    APP START & FULLSCREEN LOGIC
 ============================================================ */
 dom.startOverlay.addEventListener('click', () => {
-  if (!document.fullscreenElement) {
-    try{if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); else if(document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();}catch(e){}
-  }
+  try {
+    if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+    else if(document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
+  } catch(e) {}
+  
   initAudio();
   dom.startOverlay.style.display = 'none';
   dom.menuUI.style.display = 'flex';
   dom.muteBtn.style.display = 'flex';
   dom.fullscreenBtn.style.display = 'flex';
-  gameActive = true; // Start menu render loop
+  gameActive = true;
   lastT = performance.now();
 });
 
@@ -449,8 +451,14 @@ dom.muteBtn.addEventListener('click', ()=>{
 });
 
 dom.fullscreenBtn.addEventListener('click', () => {
-  if (!document.fullscreenElement) try{if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); else if(document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();}catch(e){}
-  else document.exitFullscreen();
+  try {
+    if (!document.fullscreenElement) {
+      if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+      else if(document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  } catch(e) {}
 });
 
 /* ============================================================
@@ -492,12 +500,10 @@ function createMenuLobby() {
     if(obj.userData.isMenu || obj.userData.isWorld) scene.remove(obj);
   }
   
-  // Menu Ground Patch
   const groundGeo = new THREE.CircleGeometry(30, 32);
   const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ color:0x4a7a3c, flatShading:true }));
   ground.rotation.x = -Math.PI/2; ground.userData.isMenu = true; scene.add(ground);
 
-  // Trees & Rocks
   for(let i=0; i<15; i++) {
     const ang = (i/15) * Math.PI * 2;
     const dist = 20 + Math.random() * 8;
@@ -515,7 +521,6 @@ function createMenuLobby() {
     }
   }
 
-  // Player Character
   menuCharacter = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({ color:0x3a5a8a, flatShading:true, roughness:0.7 });
   const headMat = new THREE.MeshStandardMaterial({ color:0xd8a878, flatShading:true });
@@ -533,7 +538,6 @@ function createMenuLobby() {
   menuCharacter.userData.isMenu = true;
   scene.add(menuCharacter);
 
-  // Background AI Bots
   for(let i=0; i<3; i++) {
     const bot = new THREE.Group();
     const bMat = new THREE.MeshStandardMaterial({ color:0x8a3a3a, flatShading:true });
@@ -872,7 +876,6 @@ function initControls(){
   window.addEventListener('contextmenu', e=>{ if(gameActive) e.preventDefault(); });
   window.addEventListener('mousemove', e=>{ if(document.pointerLockElement && gamePhase==='playing'){ cameraYaw -= e.movementX*0.002; cameraPitch -= e.movementY*0.002; cameraPitch=Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, cameraPitch)); } });
 
-  // Menu Camera Swipe
   window.addEventListener('touchstart', e => { if(gamePhase === 'menu') { menuTouchId = e.changedTouches[0].identifier; menuLastX = e.changedTouches[0].clientX; } });
   window.addEventListener('touchmove', e => { if(gamePhase === 'menu' && menuTouchId !== null) { for(const t of e.changedTouches) if(t.identifier === menuTouchId) { menuCameraAngle += (t.clientX - menuLastX) * 0.01; menuLastX = t.clientX; } } });
   window.addEventListener('touchend', e => { if(gamePhase === 'menu') for(const t of e.changedTouches) if(t.identifier === menuTouchId) menuTouchId = null; });
@@ -1028,7 +1031,6 @@ function updateGame(dt){
     return;
   }
 
-  // Hide touch controls in lobby/dropping to prevent UI bugs
   if(gamePhase === 'lobby') {
     dom.touchControls.style.display = 'none';
     playerPos.y = LOBBY_HEIGHT + 1.7; playerVelY = 0; isGrounded = true;
@@ -1054,7 +1056,6 @@ function updateGame(dt){
     drawMinimap(); renderer.render(scene, camera); return;
   }
 
-  // PLAYING PHASE
   if(isMobile) dom.touchControls.style.display = 'block';
 
   let ix=joyX, iy=joyY; if(!isMobile){ const pc=window.getPCInput(); ix=pc.x; iy=pc.y; }
