@@ -148,11 +148,6 @@
 
 <div id="rotateOverlay"><div>📱➡️<br>Please Rotate Your Device<br>to Landscape Mode</div></div>
 
-<div id="startOverlay">
-  <h1>WARZONE</h1>
-  <p>TAP TO ENTER</p>
-</div>
-
 <div id="menuUI">
   <div id="menuTitle">
     <h1>WARZONE</h1>
@@ -163,6 +158,7 @@
     <button class="menu-btn" onclick="startGame('br')">Battle Royale</button>
     <button class="menu-btn" onclick="startGame('survival')">Wave Survival</button>
     <button class="menu-btn" onclick="openP2PPanel()">Custom P2P</button>
+    <button class="menu-btn secondary" id="menuFsBtn" style="font-size: 20px;">⛶</button>
   </div>
 
   <div id="p2pPanel">
@@ -430,19 +426,12 @@ window.copyPeerId = () => { navigator.clipboard.writeText(document.getElementByI
 /* ============================================================
    APP START & FULLSCREEN LOGIC
 ============================================================ */
-dom.startOverlay.addEventListener('click', () => {
+const menuFsBtn = document.getElementById("menuFsBtn");
+if(menuFsBtn) menuFsBtn.addEventListener("click", () => {
   try {
     if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
     else if(document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
   } catch(e) {}
-  
-  initAudio();
-  dom.startOverlay.style.display = 'none';
-  dom.menuUI.style.display = 'flex';
-  dom.muteBtn.style.display = 'flex';
-  dom.fullscreenBtn.style.display = 'flex';
-  gameActive = true;
-  lastT = performance.now();
 });
 
 dom.muteBtn.addEventListener('click', ()=>{
@@ -1540,6 +1529,13 @@ function endGame(victory){
 window.startGame = startGame;
 window.dropFromLobby = dropFromLobby;
 
+document.addEventListener("click", initAudio, {once:true});
+document.addEventListener("touchstart", initAudio, {once:true});
+dom.menuUI.style.display = "flex";
+dom.muteBtn.style.display = "flex";
+dom.fullscreenBtn.style.display = "flex";
+gameActive = true;
+lastT = performance.now();
 initThree();
 createWeapon();
 initControls();
