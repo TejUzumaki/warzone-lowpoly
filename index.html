@@ -10,26 +10,30 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
   html, body { overscroll-behavior: none; touch-action: none; }
-  body { overflow: hidden; background: #111; font-family: 'Segoe UI', system-ui, sans-serif; width: 100vw; height: 100vh; position: fixed; color: #fff; }
+  body { overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', system-ui, sans-serif; width: 100vw; height: 100vh; position: fixed; }
   canvas { display: block; }
 
-  /* Orientation Overlay */
+  /* Landscape Enforcement Overlay */
   #rotateOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; align-items: center; justify-content: center; color: #fff; font-size: 24px; text-align: center; padding: 20px; }
   @media screen and (orientation: portrait) { #rotateOverlay { display: flex !important; } }
 
-  /* 3D Menu UI */
-  #menuUI { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; justify-content: flex-end; padding: 40px; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 40%, transparent 70%); pointer-events: none; }
-  #menuTitle { position: absolute; top: 40px; left: 40px; }
-  #menuTitle h1 { font-size: 48px; font-weight: 900; letter-spacing: 4px; color: #fff; text-shadow: 0 0 20px rgba(144,238,144,0.5); }
-  #menuTitle p { font-size: 16px; letter-spacing: 4px; color: #90ee90; font-weight: bold; }
-  .menu-btns { display: flex; gap: 15px; pointer-events: auto; justify-content: center; align-items: center; }
-  .menu-btn { padding: 15px 30px; font-size: 16px; font-weight: 800; letter-spacing: 2px; background: rgba(30,30,35,0.8); color: #fff; border: 2px solid #90ee90; border-radius: 8px; cursor: pointer; backdrop-filter: blur(5px); transition: all 0.2s; text-transform: uppercase; }
-  .menu-btn:hover { background: #90ee90; color: #111; }
-  .menu-btn.secondary { border-color: #555; color: #ccc; width: 50px; height: 50px; padding: 0; display: flex; align-items: center; justify-content: center; }
-  .menu-btn.secondary:hover { background: #555; color: #fff; }
+  /* Start Screen (Transparent overlay on top of 3D Menu) */
+  #startScreen { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.6) 100%); }
+  .start-content { text-align: center; padding: 32px; background: rgba(20,20,25,0.8); border: 2px solid #a3b899; border-radius: 12px; backdrop-filter: blur(5px); max-width: 500px; width: 90%; max-height: 92vh; overflow-y: auto; }
+  .start-content h1 { font-size: clamp(28px,6vw,56px); font-weight: 900; letter-spacing: 4px; color: #fff; margin-bottom: 8px; }
+  .start-content .subtitle { font-size: 16px; letter-spacing: 4px; color: #90ee90; font-weight: bold; margin-bottom: 16px; }
+  .mode-select { display: flex; gap: 10px; justify-content: center; margin: 16px 0 6px; flex-wrap: wrap; }
+  .mode-btn { padding: 12px 20px; font-size: 13px; font-weight: 800; letter-spacing: 1px; background: rgba(255,255,255,0.08); color: #ccc; border: 2px solid rgba(255,255,255,0.25); border-radius: 6px; cursor: pointer; }
+  .mode-btn.active { background: #90ee90; color: #111; border-color: #90ee90; }
+  .controls-info { margin: 20px 0; text-align: left; display: inline-block; background: rgba(0,0,0,0.4); padding: 16px 20px; border-radius: 8px; border-left: 4px solid #90ee90; }
+  .controls-info div { color: #ccc; font-size: 13px; padding: 4px 0; }
+  .controls-info span { color: #90ee90; font-weight: 700; margin-right: 8px; display: inline-block; width: 95px; }
+  #startBtn { margin-top: 16px; padding: 16px 56px; font-size: 20px; font-weight: 900; letter-spacing: 4px; background: #90ee90; color: #111; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase; transition: transform 0.1s; }
+  #startBtn:active { transform: scale(0.95); }
+  #layoutBtn { margin-top: 12px; padding: 10px 20px; font-size: 14px; font-weight: 800; background: #333; color: #fff; border: 1px solid #555; border-radius: 6px; cursor: pointer; }
 
   /* P2P Panel */
-  #p2pPanel { display: none; position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(20,20,25,0.95); padding: 25px; border-radius: 12px; border: 1px solid #90ee90; pointer-events: auto; width: 90%; max-width: 400px; }
+  #p2pPanel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20,20,25,0.95); padding: 25px; border-radius: 12px; border: 1px solid #90ee90; z-index: 1001; width: 90%; max-width: 400px; }
   .p2p-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
   .p2p-header h3 { color: #90ee90; font-size: 18px; letter-spacing: 2px; }
   .p2p-close { background: none; border: none; color: #ff4444; font-size: 24px; cursor: pointer; }
@@ -40,7 +44,6 @@
   .p2p-btn { width: 100%; padding: 12px; background: #90ee90; color: #111; border: none; border-radius: 6px; font-weight: 800; cursor: pointer; }
   #p2pStatus { text-align: center; margin-top: 10px; font-size: 12px; color: #aaa; }
 
-  /* HUD */
   #hud { position: fixed; inset: 0; z-index: 100; pointer-events: none; display: none; }
   #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); --spread: 4px; --ch-color: #fff; }
   .ch-line { position: absolute; background: var(--ch-color); box-shadow: 0 0 3px #000; transition: background 0.15s; }
@@ -49,15 +52,14 @@
   .ch-bottom { width: 2px; height: 8px; left: -1px; top: calc(4px + var(--spread)); }
   .ch-left { width: 8px; height: 2px; top: -1px; left: calc(-12px - var(--spread)); }
   .ch-dot { width: 4px; height: 4px; background: var(--ch-color); position: absolute; left: -2px; top: -2px; border-radius: 50%; transition: background 0.15s; }
-  
-  /* HUD Layout Fixes */
-  #minimap { position: absolute; top: 20px; left: 20px; width: 140px; height: 140px; border: 3px solid rgba(255,255,255,0.5); border-radius: 4px; background: rgba(0,0,0,0.7); pointer-events: none; backdrop-filter: blur(2px); display: none; }
-  #playerCountTop { position: absolute; top: 20px; left: 180px; background: rgba(30,30,35,0.75); padding: 10px 14px; border-radius: 8px; text-align: right; backdrop-filter: blur(4px); display: none; }
+
+  /* HUD Layout (Fixed for Landscape) */
+  #minimap { position: absolute; top: 20px; left: 20px; width: 140px; height: 140px; border: 3px solid rgba(255,255,255,0.5); border-radius: 4px; background: rgba(0,0,0,0.7); pointer-events: none; backdrop-filter: blur(2px); transform-origin: top left; }
+  #playerCountTop { position: absolute; top: 20px; left: 180px; background: rgba(30,30,35,0.75); padding: 10px 14px; border-radius: 8px; text-align: right; backdrop-filter: blur(4px); transform-origin: top left; }
   #playerCountTop .pc-label { color: #aaa; font-size: 9px; display: block; letter-spacing: 1px; }
   #playerCountTop .pc-val { color: #ff8844; font-size: 17px; font-weight: 900; }
-  #compass { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 4px; color: #fff; font-weight: 800; font-size: 14px; letter-spacing: 2px; border: 1px solid rgba(255,255,255,0.2); display: none; }
   
-  #topRightHud { position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+  #topRightHud { position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; transform-origin: top right; }
   #statsDisplay { font-size: 14px; font-weight: 800; color: #fff; background: rgba(30,30,35,0.75); padding: 10px 16px; border-radius: 8px; display: flex; gap: 18px; backdrop-filter: blur(4px); }
   #statsDisplay .stat-label { color: #aaa; font-size: 10px; display: block; letter-spacing: 1px; }
   #statsDisplay .stat-val { color: #90ee90; font-size: 20px; font-weight: 900; }
@@ -71,10 +73,12 @@
   #healthFill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff3333, #ff5555); transition: width 0.2s ease-out; border-radius: 8px; }
   .bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; }
 
-  #zoneTimer { background: rgba(30,30,35,0.75); padding: 6px 16px; border-radius: 8px; text-align: center; backdrop-filter: blur(4px); display: none; }
+  #zoneTimer { background: rgba(30,30,35,0.75); padding: 6px 16px; border-radius: 8px; text-align: center; backdrop-filter: blur(4px); }
   #zoneTimer .zt-label { color: #aaa; font-size: 9px; letter-spacing: 2px; display: block; }
   #zoneTimer .zt-val { color: #ffcc44; font-size: 17px; font-weight: 900; }
   #zoneTimer.shrinking .zt-val { color: #ff4444; }
+
+  #compass { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 4px; color: #fff; font-weight: 800; font-size: 14px; letter-spacing: 2px; border: 1px solid rgba(255,255,255,0.2); }
 
   #killFeed { position: absolute; top: 170px; right: 20px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; max-width: 220px; }
   .kf-entry { background: rgba(20,20,25,0.75); color: #fff; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 4px; border-right: 3px solid #ff4444; opacity: 0; animation: kfFade 4s ease forwards; white-space: nowrap; }
@@ -89,35 +93,36 @@
   #damageNumbers { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
   .dmg-number { position: absolute; font-weight: 900; pointer-events: none; text-shadow: 2px 2px 3px rgba(0,0,0,0.95), -1px -1px 2px rgba(0,0,0,0.95); transform: translate(-50%,-50%); z-index: 155; }
   .player-dmg-popup { position: absolute; color: #ff4444; font-size: 22px; font-weight: 900; text-shadow: 2px 2px 4px #000; pointer-events: none; z-index: 155; transition: transform 1s ease-out, opacity 1s ease-out; }
+
   #waveAnnounce { position: absolute; top: 35%; left: 50%; transform: translate(-50%,-50%); font-size: 36px; font-weight: 900; color: #fff; text-shadow: 0 0 20px #90ee90; opacity: 0; pointer-events: none; transition: opacity 0.4s; letter-spacing: 4px; text-align: center; }
 
   /* Touch Controls - Clean & Icon Only */
   #touchControls { position: fixed; inset: 0; z-index: 200; pointer-events: none; display: none; }
   #joystickArea { position: absolute; bottom: 0; left: 0; width: 45%; height: 50%; pointer-events: auto; }
-  #joystickBase { width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.25); position: absolute; left: 40px; bottom: 40px; }
+  #joystickBase { width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.25); position: absolute; left: 40px; bottom: 40px; transform-origin: bottom left; }
   #joystickKnob { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.75); position: absolute; left: 36px; top: 36px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
   #lookArea { position: absolute; inset: 0; left: 45%; pointer-events: auto; z-index: 1; touch-action: none; }
   .action-btn { position: absolute; border-radius: 50%; background: rgba(30,30,35,0.6); border: 2px solid rgba(255,255,255,0.3); color: #fff; display: flex; align-items: center; justify-content: center; pointer-events: auto; cursor: pointer; backdrop-filter: blur(4px); transition: transform 0.05s, background 0.1s; touch-action: none; z-index: 2; }
   .action-btn:active { transform: scale(0.88); background: rgba(144, 238, 144, 0.4); }
   .action-btn svg { width: 60%; height: 60%; fill: #fff; }
   
-  #fireBtn { bottom: 40px; right: 40px; width: 90px; height: 90px; border-color: #ff4444; color: #ff4444; }
+  #fireBtn { bottom: 40px; right: 40px; width: 90px; height: 90px; border-color: #ff4444; color: #ff4444; transform-origin: bottom right; }
   #fireBtn svg { fill: #ff4444; }
-  #jumpBtn { bottom: 135px; right: 45px; width: 55px; height: 55px; }
-  #crouchBtn { bottom: 45px; right: 135px; width: 55px; height: 55px; }
-  #reloadBtn { bottom: 110px; right: 130px; width: 50px; height: 50px; }
-  #scopeBtn { bottom: 170px; right: 45px; width: 50px; height: 50px; }
-  #sprintBtn { bottom: 45px; left: 180px; width: 55px; height: 55px; border-color: #44ff88; color: #44ff88; }
+  #jumpBtn { bottom: 135px; right: 45px; width: 55px; height: 55px; transform-origin: bottom right; }
+  #crouchBtn { bottom: 45px; right: 135px; width: 55px; height: 55px; transform-origin: bottom right; }
+  #reloadBtn { bottom: 110px; right: 130px; width: 50px; height: 50px; transform-origin: bottom right; }
+  #scopeBtn { bottom: 170px; right: 45px; width: 50px; height: 50px; transform-origin: bottom right; }
+  #sprintBtn { bottom: 45px; left: 180px; width: 55px; height: 55px; border-color: #44ff88; color: #44ff88; transform-origin: bottom left; }
   #sprintBtn svg { fill: #44ff88; }
   #sprintBtn.active { background: rgba(68, 255, 136, 0.4); }
-  #switchBtn { bottom: 110px; left: 180px; width: 50px; height: 50px; }
+  #switchBtn { bottom: 110px; left: 180px; width: 50px; height: 50px; transform-origin: bottom left; }
 
   #lootMenu { position: fixed; bottom: 160px; left: 50%; transform: translateX(-50%); background: rgba(20,20,25,0.95); border: 2px solid #90ee90; border-radius: 8px; padding: 15px; z-index: 200; text-align: center; min-width: 180px; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
   #lootTitle { color: #90ee90; font-weight: 800; font-size: 12px; letter-spacing: 2px; margin-bottom: 10px; }
   #lootItems { display: flex; flex-direction: column; gap: 8px; }
   .loot-item-btn { background: #90ee90; color: #111; border: none; padding: 10px 20px; font-weight: 800; border-radius: 4px; cursor: pointer; font-size: 14px; }
   .loot-item-btn:active { transform: scale(0.95); }
-  
+
   #lobbyUI { position: fixed; inset: 0; z-index: 300; display: none; align-items: center; justify-content: center; flex-direction: column; pointer-events: none; }
   #lobbyInfo { text-align: center; margin-bottom: 30px; }
   #lobbyInfo h2 { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: #fff; text-shadow: 0 0 15px rgba(144,238,144,0.5); }
@@ -132,60 +137,86 @@
   .death-stats { color: #ccc; font-size: 15px; margin-top: 8px; letter-spacing: 1px; }
   #respawnBtn { margin-top: 30px; padding: 16px 48px; font-size: 18px; font-weight: 900; background: #90ee90; color: #111; border: none; border-radius: 6px; cursor: pointer; }
 
-  #muteBtn, #fullscreenBtn { position: fixed; top: 20px; z-index: 1001; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; width: 40px; height: 40px; display: none; align-items: center; justify-content: center; cursor: pointer; }
+  /* Utility Buttons (Mute & Fullscreen) */
+  #muteBtn, #fullscreenBtn { position: fixed; top: 20px; z-index: 1001; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   #muteBtn { right: 20px; }
   #fullscreenBtn { right: 70px; }
   #muteBtn svg, #fullscreenBtn svg { width: 20px; height: 20px; fill: #fff; }
+
+  /* LAYOUT EDITOR */
+  #editModal { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 2px solid #90ee90; padding: 15px; border-radius: 8px; z-index: 2000; display: none; flex-direction: column; gap: 10px; align-items: center; color: #fff; }
+  #editModal h3 { color: #90ee90; font-size: 16px; letter-spacing: 2px; }
+  #editActiveEl { color: #ffcc44; font-weight: 800; }
+  .edit-controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .edit-btn { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 12px; }
+  .edit-btn.save { background: #90ee90; color: #111; }
+  .edit-btn.reset { background: #ff4444; color: #fff; }
+  .editing #joystickArea, .editing #lookArea { pointer-events: none !important; }
+  .editing .action-btn, .editing #joystickBase, .editing #minimap, .editing #topRightHud, .editing #playerCountTop { border: 2px dashed cyan !important; pointer-events: auto !important; z-index: 1500 !important; }
+  .editing .action-btn { background: rgba(0,0,0,0.8) !important; }
 </style>
 </head>
 <body>
 
 <div id="rotateOverlay"><div>📱➡️<br>Please Rotate Your Device<br>to Landscape Mode</div></div>
 
-<div id="menuUI">
-  <div id="menuTitle">
-    <h1>WARZONE</h1>
-    <p>LOW POLY TACTICAL 7.0</p>
+<div id="startScreen">
+  <div class="start-content">
+    <h1>LOW POLY WARZONE</h1>
+    <p class="subtitle">TACTICAL SURVIVAL 7.0</p>
+    <div class="mode-select">
+      <button class="mode-btn active" data-mode="br">BATTLE ROYALE</button>
+      <button class="mode-btn" data-mode="survival">WAVE SURVIVAL</button>
+    </div>
+    <div class="controls-info">
+      <div><span>MOVE</span> WASD / Left Joystick</div>
+      <div><span>LOOK</span> Mouse / Right Screen Drag</div>
+      <div><span>FIRE</span> Auto / Fire Btn (Drag to aim!)</div>
+      <div><span>SPRINT</span> Shift / Run Btn (Toggle)</div>
+      <div><span>ADS</span> Right Mouse / Scope Btn</div>
+      <div><span>JUMP</span> Space / Jump Btn</div>
+      <div><span>SWITCH</span> 1-5 / SWP Btn</div>
+      <div><span>LOOT</span> Walk near glowing crates</div>
+    </div>
+    <button id="startBtn">DROP IN</button>
+    <br><button id="layoutBtn">⚙️ CUSTOMIZE LAYOUT</button>
+    <br><button id="p2pBtn" style="margin-top: 10px; padding: 10px 20px; font-size: 14px; font-weight: 800; background: #333; color: #fff; border: 1px solid #555; border-radius: 6px; cursor: pointer;">🌐 CUSTOM P2P</button>
   </div>
-  
-  <div class="menu-btns" id="mainMenuBtns">
-    <button class="menu-btn" onclick="startGame('br')">Battle Royale</button>
-    <button class="menu-btn" onclick="startGame('survival')">Wave Survival</button>
-    <button class="menu-btn" onclick="openP2PPanel()">Custom P2P</button>
-    <button class="menu-btn secondary" id="menuFsBtn" style="font-size: 20px;">⛶</button>
-  </div>
+</div>
 
-  <div id="p2pPanel">
-    <div class="p2p-header">
-      <h3>CUSTOM ARENA (P2P)</h3>
-      <button class="p2p-close" onclick="closeP2PPanel()">✕</button>
-    </div>
-    <div class="id-box">
-      <span id="myPeerId">Loading ID...</span>
-      <button class="copy-btn" onclick="copyPeerId()">Copy</button>
-    </div>
-    <input type="text" class="p2p-input" id="friendIdInput" placeholder="Paste Friend's ID here...">
-    <button class="p2p-btn" onclick="connectToFriend()">Connect & Start</button>
-    <div id="p2pStatus">Create a room and share your ID, or join a friend's room.</div>
+<div id="p2pPanel">
+  <div class="p2p-header">
+    <h3>CUSTOM ARENA (P2P)</h3>
+    <button class="p2p-close" onclick="closeP2PPanel()">✕</button>
   </div>
+  <div class="id-box">
+    <span id="myPeerId">Loading ID...</span>
+    <button class="copy-btn" onclick="copyPeerId()">Copy</button>
+  </div>
+  <input type="text" class="p2p-input" id="friendIdInput" placeholder="Paste Friend's ID here...">
+  <button class="p2p-btn" onclick="connectToFriend()">Connect & Start</button>
+  <div id="p2pStatus">Create a room and share your ID, or join a friend's room.</div>
 </div>
 
 <button id="muteBtn"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg></button>
 <button id="fullscreenBtn"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
 
-<div id="hud">
-  <div id="crosshair"><div class="ch-line ch-top"></div><div class="ch-line ch-right"></div><div class="ch-line ch-bottom"></div><div class="ch-line ch-left"></div><div class="ch-dot"></div></div>
+<div id="hud" style="display:none">
+  <div id="crosshair">
+    <div class="ch-line ch-top"></div><div class="ch-line ch-right"></div><div class="ch-line ch-bottom"></div><div class="ch-line ch-left"></div><div class="ch-dot"></div>
+  </div>
   <div id="compass">N</div>
   <canvas id="minimap" width="140" height="140"></canvas>
-  <div id="playerCountTop"><span class="pc-label">ALIVE</span><span class="pc-val" id="playerCountVal">25</span></div>
+  <div id="playerCountTop" style="display:none"><span class="pc-label">ALIVE</span><span class="pc-val" id="playerCountVal">25</span></div>
   
   <div id="topRightHud">
     <div id="statsDisplay">
       <div id="waveStat"><span class="stat-label">WAVE</span><span class="stat-val" id="waveNum">1</span></div>
       <div><span class="stat-label">ELIMS</span><span class="stat-val" id="killCount">0</span></div>
       <div><span class="stat-label">DMG</span><span class="stat-val" id="dmgDisplay">0</span></div>
+      <div><span class="stat-label">SCORE</span><span class="stat-val" id="scoreDisplay">0</span></div>
     </div>
-    <div id="zoneTimer"><span class="zt-label">SAFE ZONE</span><span class="zt-val" id="zoneTimerVal">60</span></div>
+    <div id="zoneTimer" style="display:none"><span class="zt-label">SAFE ZONE</span><span class="zt-val" id="zoneTimerVal">60</span></div>
     <div id="weaponInfo">
       <span id="weaponNameTag">ASSAULT RIFLE</span>
       <div id="ammoDisplay"><span id="ammoCount">30</span><span id="ammoReserve">/ 120</span></div>
@@ -201,7 +232,7 @@
   <div id="nameTags"></div><div id="damageNumbers"></div><div id="waveAnnounce"></div>
 </div>
 
-<div id="touchControls">
+<div id="touchControls" style="display:none">
   <div id="joystickArea"><div id="joystickBase"><div id="joystickKnob"></div></div></div>
   <div id="lookArea"></div>
   
@@ -217,6 +248,17 @@
 <div id="lootMenu"><div id="lootTitle">LOOT CRATE</div><div id="lootItems"></div></div>
 <div id="lobbyUI"><div id="lobbyInfo"><h2>STAGING AREA</h2><p>Press DROP to enter the battlefield</p></div><button id="dropBtn">DROP!</button></div>
 <div id="deathScreen"><h2 id="deathTitle">SQUAD ELIMINATED</h2><p class="death-stats" id="deathStats"></p><button id="respawnBtn">PLAY AGAIN</button></div>
+
+<div id="editModal">
+  <h3>LAYOUT EDITOR</h3>
+  <div>Selected: <span id="editActiveEl">None</span></div>
+  <div class="edit-controls">
+    <button class="edit-btn" onclick="changeSize(0.1)">Size +</button>
+    <button class="edit-btn" onclick="changeSize(-0.1)">Size -</button>
+    <button class="edit-btn reset" onclick="resetLayout()">Reset</button>
+    <button class="edit-btn save" onclick="saveLayout()">Save & Exit</button>
+  </div>
+</div>
 
 <audio id="remoteAudio" autoplay></audio>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -336,7 +378,7 @@ const dom = {
   fullscreenBtn: document.getElementById('fullscreenBtn'),
   hud: document.getElementById('hud'),
   touchControls: document.getElementById('touchControls'),
-  menuUI: document.getElementById('menuUI')
+  startScreen: document.getElementById('startScreen')
 };
 
 /* ============================================================
@@ -356,19 +398,13 @@ function initPeer() {
   peer.on('error', (err) => { console.error("Peer error:", err); document.getElementById('p2pStatus').textContent = "Error: " + err.type; });
 }
 
-function openP2PPanel() {
-  document.getElementById('mainMenuBtns').style.display = 'none';
+window.openP2PPanel = function() {
   document.getElementById('p2pPanel').style.display = 'block';
   if(!peer) initPeer();
   navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => { localStream = stream; }).catch(() => { document.getElementById('p2pStatus').textContent = "Mic access denied."; });
 }
-
-function closeP2PPanel() {
-  document.getElementById('p2pPanel').style.display = 'none';
-  document.getElementById('mainMenuBtns').style.display = 'flex';
-}
-
-function connectToFriend() {
+window.closeP2PPanel = function() { document.getElementById('p2pPanel').style.display = 'none'; }
+window.connectToFriend = function() {
   const friendId = document.getElementById('friendIdInput').value.trim();
   if(!friendId || !peer) return;
   document.getElementById('p2pStatus').textContent = "Connecting...";
@@ -376,13 +412,14 @@ function connectToFriend() {
   isHost = false;
   setupConn();
 }
+window.copyPeerId = function() { navigator.clipboard.writeText(document.getElementById('myPeerId').textContent); }
 
 function setupConn() {
   peerConn.on('open', () => {
     document.getElementById('p2pStatus').textContent = "Connected! Starting game...";
     if(localStream) peer.call(peerConn.peer, localStream);
     gameMode = 'custom';
-    startGame('custom');
+    startGame();
     if(isHost) peerConn.send({type: 'start', hostPos: {x: playerPos.x, y: playerPos.y, z: playerPos.z}});
   });
   peerConn.on('data', (data) => { handlePeerData(data); });
@@ -411,22 +448,9 @@ function sendPeerShoot(s, e) { if(!peerConn || !peerConn.open) return; peerConn.
 function sendPeerHit(dmg) { if(!peerConn || !peerConn.open) return; peerConn.send({type: 'hit', dmg: dmg}); }
 function sendPeerDead() { if(!peerConn || !peerConn.open) return; peerConn.send({type: 'dead'}); }
 
-window.openP2PPanel = openP2PPanel;
-window.closeP2PPanel = closeP2PPanel;
-window.connectToFriend = connectToFriend;
-window.copyPeerId = () => { navigator.clipboard.writeText(document.getElementById('myPeerId').textContent); };
-
 /* ============================================================
-   APP START & FULLSCREEN LOGIC
+   FULLSCREEN & MUTE LOGIC
 ============================================================ */
-const menuFsBtn = document.getElementById('menuFsBtn');
-if(menuFsBtn) menuFsBtn.addEventListener('click', () => {
-  try {
-    if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
-    else if(document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
-  } catch(e) {}
-});
-
 dom.muteBtn.addEventListener('click', ()=>{
   soundEnabled = !soundEnabled;
   dom.muteBtn.innerHTML = soundEnabled ? '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>';
@@ -442,6 +466,133 @@ dom.fullscreenBtn.addEventListener('click', () => {
     }
   } catch(e) {}
 });
+
+/* ============================================================
+   LAYOUT EDITOR SYSTEM
+============================================================ */
+const customEls = ['fireBtn', 'jumpBtn', 'crouchBtn', 'reloadBtn', 'scopeBtn', 'sprintBtn', 'switchBtn', 'minimap', 'topRightHud', 'playerCountTop', 'joystickBase'];
+let activeEditEl = null;
+let editMode = false;
+let dragEditEl = null, editOffsetX = 0, editOffsetY = 0;
+
+function loadLayout() {
+  try {
+    const saved = localStorage.getItem('warzoneLayout');
+    if(!saved) return;
+    const layout = JSON.parse(saved);
+    customEls.forEach(id => {
+      const el = document.getElementById(id);
+      if(layout[id]) {
+        el.style.left = layout[id].x + 'px';
+        el.style.top = layout[id].y + 'px';
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+        el.style.transform = `scale(${layout[id].scale})`;
+        el.style.transformOrigin = layout[id].origin || 'center center';
+      }
+    });
+  } catch(e) { console.error("Layout load failed", e); }
+}
+
+function saveLayout() {
+  const layout = {};
+  customEls.forEach(id => {
+    const el = document.getElementById(id);
+    const rect = el.getBoundingClientRect();
+    const scaleMatch = el.style.transform.match(/scale\(([^)]+)\)/);
+    layout[id] = {
+      x: rect.left, y: rect.top,
+      scale: scaleMatch ? parseFloat(scaleMatch[1]) : 1,
+      origin: el.style.transformOrigin || 'center center'
+    };
+  });
+  localStorage.setItem('warzoneLayout', JSON.stringify(layout));
+  alert('Layout Saved!');
+  exitEditMode();
+}
+
+function resetLayout() {
+  localStorage.removeItem('warzoneLayout');
+  customEls.forEach(id => {
+    const el = document.getElementById(id);
+    el.style.left = ''; el.style.top = ''; el.style.right = ''; el.style.bottom = ''; el.style.transform = '';
+  });
+  alert('Layout Reset to Default!');
+}
+
+function enterEditMode() {
+  editMode = true;
+  dom.startScreen.style.display = 'none';
+  dom.hud.style.display = 'block';
+  dom.touchControls.style.display = 'block';
+  document.getElementById('editModal').style.display = 'flex';
+  document.body.classList.add('editing');
+  customEls.forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('mousedown', startDragEdit);
+    el.addEventListener('touchstart', startDragEdit, {passive: false});
+  });
+}
+
+function exitEditMode() {
+  editMode = false;
+  document.getElementById('editModal').style.display = 'none';
+  document.body.classList.remove('editing');
+  dom.hud.style.display = 'none';
+  dom.touchControls.style.display = 'none';
+  dom.startScreen.style.display = 'flex';
+  customEls.forEach(id => {
+    const el = document.getElementById(id);
+    el.removeEventListener('mousedown', startDragEdit);
+    el.removeEventListener('touchstart', startDragEdit);
+  });
+}
+
+function startDragEdit(e) {
+  e.preventDefault();
+  const t = e.touches ? e.touches[0] : e;
+  dragEditEl = e.currentTarget;
+  activeEditEl = dragEditEl.id;
+  document.getElementById('editActiveEl').textContent = activeEditEl;
+  const rect = dragEditEl.getBoundingClientRect();
+  editOffsetX = t.clientX - rect.left;
+  editOffsetY = t.clientY - rect.top;
+  window.addEventListener('touchmove', dragMoveEdit, {passive: false});
+  window.addEventListener('mousemove', dragMoveEdit);
+  window.addEventListener('touchend', endDragEdit);
+  window.addEventListener('mouseup', endDragEdit);
+}
+
+function dragMoveEdit(e) {
+  if(!dragEditEl) return;
+  e.preventDefault();
+  const t = e.touches ? e.touches[0] : e;
+  dragEditEl.style.left = (t.clientX - editOffsetX) + 'px';
+  dragEditEl.style.top = (t.clientY - editOffsetY) + 'px';
+  dragEditEl.style.right = 'auto';
+  dragEditEl.style.bottom = 'auto';
+}
+
+function endDragEdit() {
+  dragEditEl = null;
+  window.removeEventListener('touchmove', dragMoveEdit);
+  window.removeEventListener('mousemove', dragMoveEdit);
+  window.removeEventListener('touchend', endDragEdit);
+  window.removeEventListener('mouseup', endDragEdit);
+}
+
+window.changeSize = function(delta) {
+  if(!activeEditEl) return alert('Select an element first by tapping it.');
+  const el = document.getElementById(activeEditEl);
+  const curScale = (el.style.transform.match(/scale\(([^)]+)\)/) || [])[1] || 1;
+  let newScale = parseFloat(curScale) + delta;
+  newScale = Math.max(0.5, Math.min(2.5, newScale));
+  el.style.transform = `scale(${newScale})`;
+};
+
+document.getElementById('layoutBtn').addEventListener('click', enterEditMode);
+document.querySelector('.edit-btn.save').addEventListener('click', saveLayout);
+document.querySelector('.edit-btn.reset').addEventListener('click', resetLayout);
 
 /* ============================================================
    TERRAIN & WORLD
@@ -471,9 +622,7 @@ const sharedMats = {
   rockA: new THREE.MeshStandardMaterial({ color:0x808890, flatShading:true, roughness:0.9 }),
   rockB: new THREE.MeshStandardMaterial({ color:0x6a7882, flatShading:true, roughness:0.9 }),
   trunk: new THREE.MeshStandardMaterial({ color:0x5d4037, flatShading:true }),
-  leaf:  new THREE.MeshStandardMaterial({ color:0x4B7333, flatShading:true }),
-  leaf2: new THREE.MeshStandardMaterial({ color:0x2e5e22, flatShading:true }),
-  bush:  new THREE.MeshStandardMaterial({ color:0x3a6b2a, flatShading:true })
+  leaf2: new THREE.MeshStandardMaterial({ color:0x2e5e22, flatShading:true })
 };
 
 function createMenuLobby() {
@@ -858,6 +1007,7 @@ function initControls(){
   window.addEventListener('contextmenu', e=>{ if(gameActive) e.preventDefault(); });
   window.addEventListener('mousemove', e=>{ if(document.pointerLockElement && gamePhase==='playing'){ cameraYaw -= e.movementX*0.002; cameraPitch -= e.movementY*0.002; cameraPitch=Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, cameraPitch)); } });
 
+  // Menu Camera Swipe
   window.addEventListener('touchstart', e => { if(gamePhase === 'menu') { menuTouchId = e.changedTouches[0].identifier; menuLastX = e.changedTouches[0].clientX; } });
   window.addEventListener('touchmove', e => { if(gamePhase === 'menu' && menuTouchId !== null) { for(const t of e.changedTouches) if(t.identifier === menuTouchId) { menuCameraAngle += (t.clientX - menuLastX) * 0.01; menuLastX = t.clientX; } } });
   window.addEventListener('touchend', e => { if(gamePhase === 'menu') for(const t of e.changedTouches) if(t.identifier === menuTouchId) menuTouchId = null; });
@@ -1411,19 +1561,17 @@ function clearScene(){
   waveEnemiesAlive=0; dom.lootMenu.style.display = 'none';
 }
 
-function startGame(mode){
-  dom.menuUI.style.display = 'none';
-  document.getElementById('deathScreen').style.display='none';
+function startGame(){
+  initAudio();
+  dom.startScreen.style.display = 'none';
+  document.getElementById('deathScreen').style.display = 'none';
   document.getElementById('deathScreen').classList.remove('victory');
   dom.hud.style.display = 'block';
-  dom.compass.style.display = 'block';
-  dom.minimap.style.display = 'block';
   if(isMobile) dom.touchControls.style.display = 'block';
 
   if(menuCharacter) { scene.remove(menuCharacter); menuCharacter = null; }
   scene.children.filter(c => c.userData.isMenu).forEach(c => scene.remove(c));
 
-  gameMode = mode;
   clearScene();
   generateWorld();
 
@@ -1470,7 +1618,7 @@ function startGame(mode){
     wave = 1; createLobbyPlatform();
     playerPos.set(WORLD_SIZE/2, LOBBY_HEIGHT + 1.7, WORLD_SIZE/2);
     playerVelY=0; isGrounded=true;
-    for(let i=0;i<5;i++) spawnEnemy();
+    for(let i=0;i<5;i++) spawnEnemy('SCOUT');
     waveEnemiesAlive = 5; document.getElementById('waveNum').textContent = wave;
     gamePhase = 'lobby'; document.getElementById('lobbyUI').style.display = 'flex';
     announceWave('STAGING AREA', '#90ee90');
@@ -1497,7 +1645,6 @@ function endGame(victory){
   document.exitPointerLock?.();
   dom.hud.style.display='none'; dom.touchControls.style.display='none';
   document.getElementById('lobbyUI').style.display='none'; dom.lootMenu.style.display = 'none';
-  dom.compass.style.display = 'none'; dom.minimap.style.display = 'none';
   
   const ds = document.getElementById('deathScreen');
   ds.style.display='flex'; ds.classList.toggle('victory', !!victory);
@@ -1515,24 +1662,31 @@ function endGame(victory){
   }
   
   clearScene();
-  dom.menuUI.style.display = 'flex';
+  dom.startScreen.style.display = 'flex';
   createMenuLobby();
 }
 
-window.startGame = startGame;
-window.dropFromLobby = dropFromLobby;
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    gameMode = btn.dataset.mode;
+  });
+});
 
-document.addEventListener("click", initAudio, {once:true});
-document.addEventListener("touchstart", initAudio, {once:true});
-dom.menuUI.style.display = 'flex';
-dom.muteBtn.style.display = 'flex';
-dom.fullscreenBtn.style.display = 'flex';
-gameActive = true;
-lastT = performance.now();
+document.getElementById('p2pBtn').addEventListener('click', openP2PPanel);
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('respawnBtn').addEventListener('click', startGame);
+document.getElementById('dropBtn').addEventListener('click', dropFromLobby);
+document.addEventListener('click', initAudio, {once:true});
+document.addEventListener('touchstart', initAudio, {once:true});
 
 initThree();
 createWeapon();
 initControls();
+loadLayout();
+gameActive = true;
+lastT = performance.now();
 requestAnimationFrame(loop);
 </script>
 </body>
