@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>WARZONE: LOW POLY TACTICAL 4.0</title>
+<title>WARZONE: LOW POLY TACTICAL 5.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
   body { overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', system-ui, sans-serif; width: 100vw; height: 100vh; position: fixed; }
@@ -38,7 +38,7 @@
   #statsDisplay .stat-val { color: #90ee90; font-size: 20px; font-weight: 900; }
   #weaponInfo { background: rgba(30,30,35,0.75); padding: 8px 20px; border-radius: 8px; border-right: 4px solid #fff; backdrop-filter: blur(4px); display: inline-block; }
   #weaponNameTag { color: #90ee90; font-size: 11px; font-weight: 800; letter-spacing: 1px; display: block; }
-  #ammoDisplay { font-size: 30px; font-weight: 900; color: #fff; display: flex; align-items: baseline; gap: 4px; }
+  #ammoDisplay { font-size: 30px; font-weight: 900; color: #fff; display: flex; align-items: baseline; gap: 4px; transition: color 0.2s; }
   #ammoReserve { color: #aaa; font-size: 16px; }
   #playerVitals { width: 190px; display: flex; flex-direction: column; gap: 5px; }
   .bar-bg { width: 100%; height: 16px; background: rgba(0,0,0,0.6); border: 2px solid #333; border-radius: 10px; overflow: hidden; position: relative; }
@@ -132,7 +132,7 @@
 <div id="startScreen">
   <div class="start-content">
     <h1>LOW POLY WARZONE</h1>
-    <p class="subtitle">TACTICAL SURVIVAL 4.0</p>
+    <p class="subtitle">TACTICAL SURVIVAL 5.0</p>
     <div class="mode-select">
       <button class="mode-btn active" data-mode="br">BATTLE ROYALE</button>
       <button class="mode-btn" data-mode="survival">WAVE SURVIVAL</button>
@@ -188,7 +188,7 @@
 
   <div id="playerCountTop" style="display:none">
     <span class="pc-label">ALIVE</span>
-    <span class="pc-val" id="playerCountVal">40</span>
+    <span class="pc-val" id="playerCountVal">25</span>
   </div>
 
   <canvas id="minimap" width="150" height="150"></canvas>
@@ -275,7 +275,10 @@ function sfxGunshot(weaponKey){
   };
   (profiles[weaponKey]||profiles.rifle)();
 }
-function sfxEnemyFire(){ playSound(200,0.1,0.25,0.5); }
+function sfxEnemyFire(dist){ 
+  const vol = Math.max(0.05, 0.3 - (dist / 150));
+  playSound(200, 0.1, vol, 0.5); 
+}
 function sfxHit(){ playSound(800,0.04,0.2,0.3); }
 function sfxHeadshot(){ playSound(400,0.05,0.35,0.5); playSound(1200,0.04,0.2,0); }
 function sfxReload(){ playSound(600,0.03,0.15,0); setTimeout(()=>playSound(800,0.03,0.15,0),200); }
@@ -323,10 +326,10 @@ let currentWeaponKey='rifle', ammoState={}, ownedWeapons=['rifle'];
 let isReloading=false, reloadTimer=0, isFiring=false, fireTimer=0;
 let kills=0, wave=0, waveEnemiesAlive=0, gameActive=false, score=0, damageDealt=0, isADS=false, targetFov=75;
 let isSprinting=false;
-let gamePhase = 'menu'; // 'menu' | 'lobby' | 'dropping' | 'playing'
-let weaponGroup, muzzleFlash;
+let gamePhase = 'menu';
+let weaponGroup, muzzleFlash, muzzleLight;
 let lobbyPlatform = null;
-const enemies=[], colliders=[], enemyProjectiles=[], pickups=[], damageNumbers=[];
+const enemies=[], colliders=[], enemyProjectiles=[], pickups=[], damageNumbers=[], tracers=[];
 let screenShake=0, crosshairOnEnemy=false;
 let footstepTimer = 0, lastDamageTime = 0;
 
@@ -509,7 +512,7 @@ function initThree(){
 }
 
 /* ============================================================
-   VEGETATION HELPER
+   VEGETATION & MATERIALS
 ============================================================ */
 const sharedMats = {
   rockA: new THREE.MeshStandardMaterial({ color:0x808890, flatShading:true, roughness:0.9 }),
@@ -553,17 +556,40 @@ function addVegetation(cx, cz, gh, radius){
 }
 
 /* ============================================================
-   WORLD GENERATION
+   WORLD GENERATION (Overhauled)
 ============================================================ */
 function generateWorld(){
-  const planeGeo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, 80, 80); planeGeo.rotateX(-Math.PI/2);
+  const planeGeo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, 100, 100); planeGeo.rotateX(-Math.PI/2);
   const posAttr = planeGeo.attributes.position;
   for(let i=0;i<posAttr.count;i++) posAttr.setY(i, getGroundHeight(posAttr.getX(i)+WORLD_SIZE/2, posAttr.getZ(i)+WORLD_SIZE/2));
   planeGeo.computeVertexNormals();
   const ground = new THREE.Mesh(planeGeo, new THREE.MeshStandardMaterial({ color:0x5a8a3c, flatShading:true, roughness:0.85 }));
   ground.position.set(WORLD_SIZE/2, 0, WORLD_SIZE/2); ground.name='ground'; scene.add(ground);
 
-  for(let i=0;i<150;i++){
+  // Mountain Ranges
+  for(let i=0; i<3; i++) {
+    const cx = 50 + Math.random() * (WORLD_SIZE - 100);
+    const cz = 50 + Math.random() * (WORLD_SIZE - 100);
+    if (Math.abs(cx - WORLD_SIZE/2) < 60 && Math.abs(cz - WORLD_SIZE/2) < 60) continue;
+    
+    const peaks = 4 + Math.floor(Math.random() * 4);
+    for(let p=0; p<peaks; p++) {
+      const px = cx + (Math.random() - 0.5) * 40;
+      const pz = cz + (Math.random() - 0.5) * 40;
+      const pSize = 10 + Math.random() * 15;
+      const rockMat = [sharedMats.rockA, sharedMats.rockB, sharedMats.rockD][Math.floor(Math.random()*3)];
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(pSize, 1), rockMat);
+      rock.position.set(px, getGroundHeight(px, pz) + pSize * 0.4, pz);
+      rock.rotation.set(Math.random(), Math.random(), Math.random());
+      rock.scale.y = 0.8 + Math.random() * 0.3;
+      scene.add(rock);
+      colliders.push({ minX: px - pSize*0.8, maxX: px + pSize*0.8, minZ: pz - pSize*0.8, maxZ: pz + pSize*0.8, maxY: getGroundHeight(px, pz) + pSize });
+      addVegetation(px, pz, getGroundHeight(px, pz), pSize * 0.8);
+    }
+  }
+
+  // Boulders, Rock Formations & Forests
+  for(let i=0;i<120;i++){
     const cx=15+Math.random()*(WORLD_SIZE-30), cz=15+Math.random()*(WORLD_SIZE-30);
     if(Math.abs(cx-WORLD_SIZE/2)<20 && Math.abs(cz-WORLD_SIZE/2)<20) continue;
     const gh = getGroundHeight(cx,cz);
@@ -593,15 +619,8 @@ function generateWorld(){
         colliders.push({ minX:rx-rSize*0.8, maxX:rx+rSize*0.8, minZ:rz-rSize*0.8, maxZ:rz+rSize*0.8, maxY:rgh+rSize });
       }
       addVegetation(cx, cz, gh, 4);
-    } else if(roll < 0.7){
-      const sSize = 0.8+Math.random()*1.5;
-      const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(sSize,0), sharedMats.rockB);
-      rock.position.set(cx, gh+sSize*0.3, cz);
-      rock.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
-      scene.add(rock);
-      colliders.push({ minX:cx-sSize, maxX:cx+sSize, minZ:cz-sSize, maxZ:cz+sSize, maxY:gh+sSize+0.5 });
-      addVegetation(cx, cz, gh, sSize+1);
-    } else if(roll < 0.85) {
+    } else if(roll < 0.7) {
+      // Rock Arch
       const r1 = new THREE.Mesh(new THREE.DodecahedronGeometry(3,0), sharedMats.rockA);
       r1.position.set(cx-2.5, gh+3, cz); r1.rotation.z = 0.2; scene.add(r1);
       const r2 = new THREE.Mesh(new THREE.DodecahedronGeometry(3,0), sharedMats.rockB);
@@ -610,15 +629,28 @@ function generateWorld(){
       r3.position.set(cx, gh+7, cz); r3.rotation.z = 0.1; scene.add(r3);
       colliders.push({ minX:cx-4, maxX:cx+4, minZ:cz-1.5, maxZ:cz+1.5, maxY:gh+8 });
       addVegetation(cx, cz, gh, 5);
+    } else if(roll < 0.85) {
+      // Pine Tree
+      const trunkH = 2 + Math.random()*3;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, trunkH, 6), sharedMats.trunk);
+      trunk.position.set(cx, gh+trunkH/2, cz); scene.add(trunk);
+      const leafH = 4 + Math.random()*3;
+      const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.5, leafH, 6), sharedMats.leaf2);
+      leaves.position.set(cx, gh+trunkH+leafH/2, cz); scene.add(leaves);
+      colliders.push({ minX:cx-0.4, maxX:cx+0.4, minZ:cz-0.4, maxZ:cz+0.4, maxY:gh+trunkH });
     } else {
-      const trH = 3 + Math.random()*4;
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.3, trH, 5), sharedMats.trunk);
-      trunk.position.set(cx, gh+trH/2, cz); scene.add(trunk);
-      colliders.push({ minX:cx-0.4, maxX:cx+0.4, minZ:cz-0.4, maxZ:cz+0.4, maxY:gh+trH });
-      addVegetation(cx, cz, gh, 2);
+      // Fallen Log
+      const logLen = 2 + Math.random()*3;
+      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, logLen, 6), sharedMats.trunk);
+      log.position.set(cx, gh+0.4, cz);
+      log.rotation.z = Math.PI/2;
+      log.rotation.y = Math.random()*Math.PI*2;
+      scene.add(log);
+      colliders.push({ minX:cx-logLen/2, maxX:cx+logLen/2, minZ:cz-0.4, maxZ:cz+0.4, maxY:gh+1 });
     }
   }
 
+  // Scattered small rocks and crates
   for(let i=0;i<160;i++){
     const cx=5+Math.random()*(WORLD_SIZE-10), cz=5+Math.random()*(WORLD_SIZE-10), gh=getGroundHeight(cx,cz);
     if(Math.random()<0.5){
@@ -633,6 +665,7 @@ function generateWorld(){
     }
   }
 
+  // Walls
   const wallH = 120, wallY = 30;
   const bw = 3;
   const wallMat = new THREE.MeshStandardMaterial({color:0x4a5560, flatShading:true, roughness:0.9});
@@ -732,6 +765,10 @@ function buildWeaponMesh(group, weaponKey){
   muzzleFlash = new THREE.Mesh(new THREE.SphereGeometry(0.06,4,4), new THREE.MeshBasicMaterial({ color:0xffff00, transparent:true, opacity:0 }));
   muzzleFlash.position.set(0, 0.02, -0.32*scale - 0.18);
   group.add(muzzleFlash);
+  
+  muzzleLight = new THREE.PointLight(0xffaa00, 0, 8);
+  muzzleLight.position.set(0, 0.02, -0.5);
+  group.add(muzzleLight);
 }
 function switchWeapon(key){
   if(!ownedWeapons.includes(key)) return;
@@ -783,7 +820,8 @@ function spawnEnemy(etypeKey){
       x = 8 + Math.random()*(WORLD_SIZE-16); z = 8 + Math.random()*(WORLD_SIZE-16);
     }
     x = clampToWorld(x); z = clampToWorld(z);
-    const dx = x - playerPos.x; const dz = z - playerPos.z; if(Math.sqrt(dx*dx + dz*dz) > 25){
+    const dx = x - playerPos.x; const dz = z - playerPos.z;
+    if(Math.sqrt(dx*dx + dz*dz) > 25){
       valid = true;
       for(const c of colliders){ if(x>c.minX-1 && x<c.maxX+1 && z>c.minZ-1 && z<c.maxZ+1 && c.maxY>3){ valid=false; break; } }
     }
@@ -847,7 +885,10 @@ function fireEnemyProjectile(shooter, targetPos){
   const bullet = new THREE.Mesh(new THREE.SphereGeometry(0.14,6,6), new THREE.MeshBasicMaterial({ color:0xff5500 }));
   bullet.position.copy(start); bullet.scale.set(1,1,2.2); scene.add(bullet);
   enemyProjectiles.push({ mesh: bullet, velocity: dir.multiplyScalar(w.bulletSpeed), life: 2.5, shooter, dmg: Math.floor(w.dmgBody*0.5) });
-  sfxEnemyFire();
+  
+  const distToPlayer = epos.distanceTo(playerPos);
+  if(distToPlayer < 50) sfxEnemyFire(distToPlayer);
+  
   shooter.lastFireTime = performance.now();
 }
 
@@ -866,7 +907,7 @@ function checkCollisions(px, pz, rad=PLAYER_RADIUS){
 }
 
 /* ============================================================
-   CONTROLS (DYNAMIC FIRE BUTTON AIM)
+   CONTROLS
 ============================================================ */
 let joyX=0, joyY=0, jCenter=null, jTouchId=null, lookTouchId=null, lookLastX=0, lookLastY=0;
 let fireLookId = null, fireLookX = 0, fireLookY = 0;
@@ -903,7 +944,6 @@ function initControls(){
   const resetLook = e=>{ for(const t of e.changedTouches) if(t.identifier===lookTouchId) lookTouchId=null; };
   lArea.addEventListener('touchend', resetLook); lArea.addEventListener('touchcancel', resetLook);
 
-  // --- FIRE BUTTON (DRAG TO AIM) ---
   const fireBtn = document.getElementById('fireBtn');
   fireBtn.addEventListener('touchstart', e => {
     e.preventDefault();
@@ -986,8 +1026,29 @@ document.getElementById('muteBtn').addEventListener('click', ()=>{
 });
 
 /* ============================================================
-   DAMAGE NUMBER SYSTEM
+   TRACERS & DAMAGE NUMBERS
 ============================================================ */
+function spawnTracer(start, end) {
+  const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+  const material = new THREE.LineBasicMaterial({ color: 0xffff66, transparent: true, opacity: 0.8 });
+  const line = new THREE.Line(geometry, material);
+  scene.add(line);
+  tracers.push({ mesh: line, life: 0.08 });
+}
+function updateTracers(dt) {
+  for(let i=tracers.length-1; i>=0; i--) {
+    const t = tracers[i];
+    t.life -= dt;
+    t.mesh.material.opacity = Math.max(0, t.life * 10);
+    if(t.life <= 0) {
+      scene.remove(t.mesh);
+      t.mesh.geometry.dispose();
+      t.mesh.material.dispose();
+      tracers.splice(i, 1);
+    }
+  }
+}
+
 function spawnDamageNumber(worldPos, damage, isHeadshot, isPlayerDamage){
   const el = document.createElement('div');
   el.className = 'dmg-number';
@@ -1050,7 +1111,6 @@ function spawnLootCrateWeapon(pos){
   const grp = new THREE.Group();
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,0.8), new THREE.MeshStandardMaterial({ color:0xccaa44, flatShading:true, emissive:0x221800 }));
   grp.add(mesh);
-  // Loot beam
   const beamGeo = new THREE.CylinderGeometry(0.5, 0.1, 15, 6, 1, true);
   const beamMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
   const beam = new THREE.Mesh(beamGeo, beamMat);
@@ -1202,7 +1262,6 @@ function updateGame(dt){
     return;
   }
 
-  // --- PLAYING PHASE ---
   let ix=joyX, iy=joyY; if(!isMobile){ const pc=window.getPCInput(); ix=pc.x; iy=pc.y; }
 
   const fw = new THREE.Vector3(-Math.sin(cameraYaw),0,-Math.cos(cameraYaw));
@@ -1223,7 +1282,6 @@ function updateGame(dt){
   if(playerPos.y < gh + 0.3){ playerPos.y = gh + 0.3; playerVelY = Math.max(0, playerVelY); }
   playerPos.x = clampToWorld(playerPos.x); playerPos.z = clampToWorld(playerPos.z);
 
-  // Footsteps
   if(moving && isGrounded) {
     footstepTimer -= cappedDt;
     if(footstepTimer <= 0) {
@@ -1253,7 +1311,6 @@ function updateGame(dt){
     if(edgeDist < 0){ health -= 5*cappedDt; dom.zoneDamageOverlay.style.opacity = 0.7; } 
     else {
       dom.zoneDamageOverlay.style.opacity = 0;
-      // Auto-heal in safe zone
       if(performance.now() - lastDamageTime > 8000 && health < MAX_HEALTH) {
         health = Math.min(MAX_HEALTH, health + 2 * cappedDt);
       }
@@ -1290,6 +1347,7 @@ function updateGame(dt){
     stAmmo.mag--; fireTimer=wpn.fireDelay;
     weaponGroup.position.z=-0.18;
     if(muzzleFlash){ muzzleFlash.material.opacity=1; setTimeout(()=>{ if(muzzleFlash) muzzleFlash.material.opacity=0; },60); }
+    if(muzzleLight){ muzzleLight.intensity = 3; setTimeout(()=>{ if(muzzleLight) muzzleLight.intensity = 0; },60); }
     sfxGunshot(currentWeaponKey);
     screenShake = Math.min(screenShake + (wpn.pellets?1.0:0.6), 3.5);
 
@@ -1300,6 +1358,13 @@ function updateGame(dt){
       const sx=(Math.random()-0.5)*wpn.spread*2, sy=(Math.random()-0.5)*wpn.spread*2;
       shootRc.setFromCamera(new THREE.Vector2(sx,sy), camera);
       const hits2 = shootRc.intersectObjects(allEnemyMeshes, false);
+      
+      const tracerStart = new THREE.Vector3();
+      camera.getWorldPosition(tracerStart);
+      tracerStart.add(new THREE.Vector3(0.2, -0.16, -0.32).applyQuaternion(camera.quaternion));
+      const tracerEnd = hits2.length > 0 ? hits2[0].point : shootRc.ray.origin.clone().add(shootRc.ray.direction.clone().multiplyScalar(200));
+      spawnTracer(tracerStart, tracerEnd);
+
       if(hits2.length>0){
         const hitObj = hits2[0].object;
         const hitPoint = hits2[0].point;
@@ -1339,6 +1404,7 @@ function updateGame(dt){
   updateLootMenu();
   updateZone(cappedDt);
   updateDamageNumbers(cappedDt);
+  updateTracers(cappedDt);
   updateCompass();
   checkWinLoss();
 
@@ -1348,6 +1414,13 @@ function updateGame(dt){
   dom.armorFill.style.width = `${armor}%`;
   dom.ammoCount.textContent = stAmmo.mag;
   dom.ammoReserve.textContent = `/ ${stAmmo.reserve}`;
+  
+  if (stAmmo.mag <= wpn.mag * 0.25) {
+    dom.ammoCount.style.color = '#ff4444';
+  } else {
+    dom.ammoCount.style.color = '#fff';
+  }
+
   document.getElementById('killCount').textContent = kills;
   document.getElementById('scoreDisplay').textContent = score;
   dom.dmgDisplay.textContent = damageDealt;
@@ -1554,6 +1627,7 @@ function clearScene(){
   enemies.forEach(e=>{ scene.remove(e.mesh); e.nameTag.remove(); }); enemies.length=0;
   enemyProjectiles.forEach(p=>scene.remove(p.mesh)); enemyProjectiles.length=0;
   pickups.forEach(p=>scene.remove(p.mesh)); pickups.length=0;
+  tracers.forEach(t=>{ scene.remove(t.mesh); t.mesh.geometry.dispose(); t.mesh.material.dispose(); }); tracers.length=0;
   dom.nameTags.innerHTML='';
   damageNumbers.forEach(dn=>dn.el.remove()); damageNumbers.length=0;
   if(lobbyPlatform){ scene.remove(lobbyPlatform); lobbyPlatform = null; }
@@ -1590,7 +1664,7 @@ function startGame(){
     playerPos.set(WORLD_SIZE/2, LOBBY_HEIGHT + 1.7, WORLD_SIZE/2);
     playerVelY=0; isGrounded=true;
 
-    const botCount = 49; // 49 bots + 1 player = 50 total
+    const botCount = 24; // 24 bots + 1 player = 25 total
     for(let i=0;i<botCount;i++) spawnEnemy();
     for(let i=0;i<20;i++){
       const ang=Math.random()*Math.PI*2, r=Math.random()*zoneRadius*0.85;
