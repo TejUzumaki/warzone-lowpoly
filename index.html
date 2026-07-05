@@ -783,7 +783,7 @@ function spawnEnemy(etypeKey){
       x = 8 + Math.random()*(WORLD_SIZE-16); z = 8 + Math.random()*(WORLD_SIZE-16);
     }
     x = clampToWorld(x); z = clampToWorld(z);
-    if(new THREE.Vector3(x,0,z).distanceTo(playerPos) > 25){
+    const dx = x - playerPos.x; const dz = z - playerPos.z; if(Math.sqrt(dx*dx + dz*dz) > 25){
       valid = true;
       for(const c of colliders){ if(x>c.minX-1 && x<c.maxX+1 && z>c.minZ-1 && z<c.maxZ+1 && c.maxY>3){ valid=false; break; } }
     }
@@ -1590,7 +1590,7 @@ function startGame(){
     playerPos.set(WORLD_SIZE/2, LOBBY_HEIGHT + 1.7, WORLD_SIZE/2);
     playerVelY=0; isGrounded=true;
 
-    const botCount = 22;
+    const botCount = 49; // 49 bots + 1 player = 50 total
     for(let i=0;i<botCount;i++) spawnEnemy();
     for(let i=0;i<20;i++){
       const ang=Math.random()*Math.PI*2, r=Math.random()*zoneRadius*0.85;
