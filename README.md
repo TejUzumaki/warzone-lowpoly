@@ -1,110 +1,69 @@
-# 🪖 WARZONE: LOW POLY TACTICAL
+# WARZONE: LOW POLY TACTICAL (v6.0)
 
-> A fast-paced, browser-based, low-poly 3D Battle Royale and Wave Survival game built entirely with Three.js and vanilla JavaScript. No game engines, no external assets—just pure WebGL power and raw code.
+A fast-paced, browser-based, 3D Battle Royale and Wave Survival game built entirely with Three.js and Vanilla JavaScript. No external assets, no game engines—everything from the 3D models to the sound effects is procedurally generated in code.
 
-![Game Status](https://img.shields.io/badge/Status-Live-brightgreen)
-![Version](https://img.shields.io/badge/Version-5.1-blue)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![Three.js](https://img.shields.io/badge/Three.js-r160-black) ![JavaScript](https://img.shields.io/badge/Vanilla-JS-yellow) ![Platform](https://img.shields.io/badge/Platform-Browser/WebGL-blue)
 
----
+## 🎮 Game Modes
 
-## 📖 Table of Contents
-1. [About the Project](#about-the-project)
-2. [Key Features](#key-features)
-3. [How to Play](#how-to-play)
-4. [Technical Stack](#technical-stack)
-5. [World Generation & AI](#world-generation--ai)
-6. [Deployment](#deployment)
+*   **Battle Royale:** Drop into a massive map with 24 AI bots. The dynamic safe zone shrinks over time. Scavenge for weapons, manage your inventory, and be the last one standing.
+*   **Wave Survival:** Endure escalating waves of enemy AI. Eliminate them to earn health and ammo boosts. How long can you survive?
 
----
+## ✨ Key Features (v6.0 Overhaul)
 
-## 🏔️ About the Project
-**WARZONE: LOW POLY TACTICAL** was developed as a proof-of-concept to prove that AAA-style mobile/browser FPS mechanics can be achieved without heavy game engines like Unity or Unreal. It features a fully interactive 3D environment, dynamic AI, physics-based movement, and a highly optimized rendering pipeline that runs smoothly at 60FPS on both desktop and mobile browsers.
+*   **3D Panorama Main Menu:** A fully rendered dynamic 3D lobby scene featuring your character, opposing bots, sandbags, and floating weapons. The camera orbits smoothly to showcase the scene.
+*   **Military-Grade UI:** A strict charcoal and white aesthetic. No bright colors or cheap emojis.
+*   **Inline SVG Icon System:** All HUD and gameplay buttons use crisp, scalable vector graphics for a clean, AAA-game feel.
+*   **Smart Touch Controls:** 
+    *   Dynamic Fire Button: Press to shoot, drag to aim simultaneously.
+    *   ADS Sensitivity Scaling: Look sensitivity halves when aiming down sights for precision.
+*   **Tactical Minimap:** Dark military-green background with distinct Red/Blue faction triangles for enemies and a White directional triangle for the player.
+*   **Layout Editor:** Fully customizable HUD. Drag, resize, and save your button placements to `localStorage`.
+*   **Procedural Audio:** All gunshots, footsteps, and UI clicks are synthesized in real-time using the Web Audio API.
 
-## ✨ Key Features
+## 🌍 World Generation
 
-### Gameplay
-* **Two Game Modes:** Battle Royale (25 players, shrinking safe zone) and Wave Survival (endless enemy waves).
-* **Staging Area & Skydive:** Players spawn on a floating lobby platform and drop into the battlefield.
-* **5 Unique Weapons:** Pistol, SMG, Assault Rifle, Shotgun, and Sniper—each with distinct damage, recoil, spread, and reload mechanics.
-* **Loot System:** Glowing weapon crates scattered across the map with contextual UI prompts for swapping weapons.
-* **Dynamic Combat:** Bullet tracers, dynamic muzzle flash lighting, damage numbers, and headshot multipliers.
+*   **Procedural Terrain:** Rolling hills, flat spawn areas, and deep trenches generated via math noise.
+*   **Environmental Clutter:** Massive dodecahedron mountain ranges, rock arches, pine forests, fallen logs, and loot crates.
+*   **Invisible Boundaries:** Walls extend deep downward to prevent graphical glitches at the map edges.
 
-### AI Mechanics
-* **Two-Faction System:** Bots are divided into two factions. They dynamically fight each other but will retaliate against the player if provoked or if the player gets too close.
-* **Zone Awareness:** Bots take damage outside the safe zone and will dynamically pathfind back inside the circle.
+## 🤖 Enemy AI
 
-### Mobile & UI
-* **Dynamic Fire Button:** The fire button acts as a mini-joystick, allowing players to drag and aim while shooting simultaneously.
-* **Proximity Audio:** Enemy gunfire volume scales dynamically based on distance.
-* **Layout Editor:** A built-in system allowing players to drag, resize, and save their custom HUD layouts to `localStorage`.
-* **Immersive UI:** Square minimap with directional arrows, enemy stealth (only visible on map if firing), compass, and low-ammo warnings.
-* **Fullscreen & PWA Ready:** Custom fullscreen toggle and CSS overrides to prevent accidental mobile browser gestures (pull-to-refresh).
+*   **Two-Faction System:** Red and Blue bots prioritize fighting each other.
+*   **Player Interaction:** Bots will ignore the player unless provoked, if the player gets too close, or if no enemy bots are nearby.
+*   **Zone Awareness:** AI takes damage outside the safe zone and will dynamically pathfind back to the center.
 
----
+## 🛠️ Tech Stack
 
-## 🎮 How to Play
-
-### Desktop Controls
-* **Move:** `W` `A` `S` `D`
-* **Look:** Mouse
-* **Fire:** Left Mouse Button
-* **ADS (Aim):** Right Mouse Button
-* **Sprint:** `Shift` (Hold)
-* **Jump:** `Space`
-* **Crouch:** `C`
-* **Reload:** `R`
-* **Switch Weapons:** `1` `2` `3` `4` `5`
-
-### Mobile Controls
-* **Move:** Left-side Joystick
-* **Look:** Drag right side of screen
-* **Fire & Aim:** Fire Button (Drag to aim)
-* **ADS:** Scope Button
-* **Sprint:** Run Button (Toggle)
-* **Jump/Crouch/Reload:** Custom Action Buttons
-* **Customize:** Go to Settings ⚙️ on the main menu to drag and resize buttons!
-
----
-
-## 🛠 Technical Stack
-* **Rendering:** [Three.js](https://threejs.org/) (r160)
-* **Audio:** Web Audio API (Synthesized gunfire, footsteps, and UI sounds)
-* **Logic:** Vanilla JavaScript (ES6 Modules)
-* **Styling:** CSS3 (Flexbox, CSS Variables, Backdrop Filters)
-* **Hosting:** Vercel / GitHub Pages compatible
-
----
-
-## 🌍 World Generation & AI
-The map is 100% procedurally generated on load. 
-* **Terrain:** Uses a custom noise function to generate rolling hills, flat spawn areas, and deep trenches.
-* **Vegetation & Rocks:** Dynamically clusters low-poly boulders, rock arches, pine trees, and fallen logs with dynamic collision bounding boxes.
-* **AI Pathfinding:** Bots use distance-based target selection. If a bot is shot, it enters a "retaliate" state for 5 seconds. Otherwise, they prioritize opposing faction targets within a 60-unit radius, and wander dynamically when no targets are present.
-
----
+*   **Rendering:** Three.js (r160)
+*   **Audio:** Web Audio API
+*   **Architecture:** Single-file `index.html` (HTML/CSS/JS combined)
+*   **Hosting:** Vercel / GitHub
 
 ## 🚀 Deployment
 
-To run this game locally or deploy it yourself:
+To deploy the game locally or push an update to Vercel:
 
-1. **Clone the repository:**
+1. Clone the repository:
    ```bash
    git clone https://github.com/TejUzumaki/warzone-lowpoly.git
    cd warzone-lowpoly
    ```
-2. **Serve the directory:**
-   Because the game uses ES6 modules, you must serve it over a local web server.
+2. To deploy to Vercel:
    ```bash
-   npx serve .
-   # or
-   python -m http.server 8000
+   vercel --prod --yes
    ```
-3. **Deploy to Vercel/Netlify:**
-   Simply connect your GitHub repository to Vercel. No build step is required. The `index.html` is the only file you need.
+
+## 📋 Controls
+
+*   **Move:** WASD / Left Joystick
+*   **Look:** Mouse / Right Screen Drag
+*   **Fire:** Left Click / Fire Button (Drag to aim)
+*   **Sprint:** Shift / Run Button (Toggle)
+*   **ADS:** Right Click / Scope Button
+*   **Jump:** Space / Jump Button
+*   **Switch Weapon:** 1-5 / Swap Button
+*   **Loot:** Walk near glowing crates
 
 ---
-
-<div align="center">
-  <h3>Built with passion, code, and a lot of WebGL magic.</h3>
-</div>
+*Developed by TejUzumaki.*
